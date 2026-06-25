@@ -632,62 +632,6 @@ function HomeScreen({
           )}
         </div>
       </div>
-
-
-
-
-      {/* Store Info */}
-      <div className="mx-4 mb-5 bg-primary rounded-3xl p-5 shadow-2xl overflow-hidden relative">
-        <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full border-[3px] border-white/5" />
-        <div className="absolute -top-2 -right-2 w-16 h-16 rounded-full border-[2px] border-white/5" />
-
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-16 h-16 rounded-2xl bg-white overflow-hidden flex-shrink-0 shadow-xl border-2 border-white/20">
-            <ImageWithFallback src={shopLogo} alt="Alpha Mobile logo" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-white font-black text-lg leading-tight">{activeShopInfo.name}</h3>
-            <p className="text-blue-300 text-xs font-semibold mt-0.5">{activeShopInfo.subName}</p>
-            <div className="flex items-center gap-1.5 mt-1.5">
-              {(lang === "mz" ? ["Hmanruate", "Secondhand"] : ["Accessories", "Secondhand"]).map(s => (
-                <span key={s} className="text-[9px] font-black bg-white/10 text-blue-200 px-2 py-0.5 rounded-full">{s}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <p className="text-blue-100/75 text-sm leading-relaxed mb-4">
-          {activeShopInfo.description}
-        </p>
-
-        <div className="flex items-center gap-2 mb-4 bg-white/5 rounded-xl p-3 border border-white/5">
-          <MapPin size={14} className="text-blue-300 flex-shrink-0" />
-          <p className="text-blue-200 text-xs">{activeShopInfo.location}</p>
-        </div>
-
-        <div className="flex gap-2">
-          {!showShopPhone ? (
-            <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onShowPhone(); }}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl py-3 text-xs font-black active:scale-95 transition-all shadow-lg hover:from-blue-700 hover:to-indigo-700"
-            >
-              <MessageCircle size={13} /> {lang === "mz" ? "WhatsApp / Call" : "WhatsApp / Call"}
-            </button>
-          ) : (
-            <a href={`tel:${activeShopInfo.phone}`} className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl py-3 text-xs font-black active:scale-95 transition-all shadow-lg hover:from-blue-700 hover:to-indigo-700">
-              <Phone size={13} /> {activeShopInfo.phone}
-            </a>
-          )}
-          <a 
-            href={`https://instagram.com/${activeShopInfo.instagram.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl py-3 text-xs font-black active:scale-95 transition-all shadow-lg hover:from-blue-700 hover:to-indigo-700"
-          >
-            Instagram
-          </a>
-        </div>
-      </div>
       {/* Footer */}
       <Footer lang={lang} onNavigateTab={onNavigateTab} />
     </div>
