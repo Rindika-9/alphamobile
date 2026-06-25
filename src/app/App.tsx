@@ -706,6 +706,29 @@ function HomeScreen({
 
 // ─── SHOP SCREEN ──────────────────────────────────────────────────────────────
 
+const CATEGORY_ICONS: Record<string, string> = {
+  All: "🛍️",
+  iPhones: "📱",
+  "Android Phones": "🤖",
+  AirPods: "🎧",
+  Headphones: "🎧",
+  Earphones: "🎧",
+  Chargers: "🔌",
+  "Power Banks": "🔋",
+  Speakers: "🔊",
+  "iPhone Accessories": "⚡",
+};
+
+const getPriceRanges = (lang: "en" | "mz") => [
+  { id: "All", label: lang === "mz" ? "A vaiin" : "All Prices", min: 0, max: Infinity },
+  { id: "below_7000", label: lang === "mz" ? "$7,000 hnuai lam" : "Below $7,000", min: 0, max: 6999 },
+  { id: "7000_10000", label: "$7,000 - $10,000", min: 7000, max: 10000 },
+  { id: "10000_15000", label: "$10,000 - $15,000", min: 10000, max: 15000 },
+  { id: "15000_20000", label: "$15,000 - $20,000", min: 15000, max: 20000 },
+  { id: "20000_25000", label: "$20,000 - $25,000", min: 20000, max: 25000 },
+  { id: "above_25000", label: lang === "mz" ? "$25,000 chung lam" : "Above $25,000", min: 25001, max: Infinity },
+];
+
 function ShopScreen({
   products,
   onProductSelect,
@@ -726,11 +749,24 @@ function ShopScreen({
   onNavigateTab?: (tab: Tab) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState(initialCategory || "All");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    initialCategory && initialCategory !== "All" ? initialCategory : null
+  );
+  const [activePriceRange, setActivePriceRange] = useState("All");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Update category when initialCategory changes (e.g. navigating from Home)
   useEffect(() => {
-    if (initialCategory) setCategory(initialCategory);
+    if (initialCategory) {
+      if (initialCategory === "All") {
+        setSelectedCategory("All");
+      } else {
+        setSelectedCategory(initialCategory);
+      }
+    } else {
+      setSelectedCategory(null);
+    }
+    setActivePriceRange("All");
   }, [initialCategory]);
 
   // Sync local search with searchQuery prop (e.g. from desktop topbar)
@@ -748,75 +784,232 @@ function ShopScreen({
     }
   };
 
+  const handleBack = () => {
+    setSearch("");
+    if (onSearchQueryChange) onSearchQueryChange("");
+    setSelectedCategory(null);
+    setActivePriceRange("All");
+  };
+
+  const ranges = getPriceRanges(lang);
+  const activeRange = ranges.find(r => r.id === activePriceRange) || ranges[0];
+  const getRangeLabel = (id: string) => {
+    const r = ranges.find(x => x.id === id);
+    return r ? r.label : (lang === "mz" ? "Man bit" : "Price Range");
+  };
+
+  const isBrowsingProducts = selectedCategory !== null || search.trim() !== "";
+
   const filtered = products
-    .filter(p => (search ? p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()) : true) && (category === "All" || p.category === category));
+    .filter(p => {
+      const matchSearch = search ? p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()) : true;
+      const matchCategory = !selectedCategory || selectedCategory === "All" || p.category === selectedCategory;
+      const matchPrice = p.price >= activeRange.min && p.price <= activeRange.max;
+      return matchSearch && matchCategory && matchPrice;
+    });
 
   return (
     <div className="flex-1 overflow-y-auto pb-4 md:pb-6" style={{ scrollbarWidth: "none" }}>
       <div className="px-4 pb-3 bg-background sticky top-0 z-10 pt-4 md:pt-2">
-        <h2 className="text-xl font-black text-foreground mb-3">{t("shop", lang)}</h2>
+        <div className="flex items-center justify-between mb-3 min-h-[38px]">
+          {isBrowsingProducts ? (
+            <button 
+              onClick={handleBack} 
+              className="flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-secondary/50 px-3.5 py-2 rounded-full border border-border"
+            >
+              <ArrowLeft size={14} />
+              <span>{lang === "mz" ? "Category thlanna" : "Back to Categories"}</span>
+            </button>
+          ) : (
+            <h2 className="text-xl font-black text-foreground">{t("shop", lang)}</h2>
+          )}
+          
+          {/* Price Filter Button - only visible when browsing products */}
+          {isBrowsingProducts && (
+            <div className="relative">
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                className={`flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-full border transition-all cursor-pointer ${
+                  activePriceRange !== "All" 
+                    ? "bg-primary text-white border-primary shadow-md" 
+                    : "bg-card text-foreground border border-border hover:border-accent/30"
+                }`}
+              >
+                <Filter size={13} />
+                <span>
+                  {activePriceRange === "All" 
+                    ? (lang === "mz" ? "Man bit" : "Price Range") 
+                    : getRangeLabel(activePriceRange)}
+                </span>
+              </button>
+              
+              {/* Filter Dropdown */}
+              {isFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 py-2 animate-fade-in">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-4 py-1.5 border-b border-border/50">
+                      {lang === "mz" ? "Man bit zat thlanna" : "Price Filter"}
+                    </p>
+                    <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+                      {ranges.map(range => (
+                        <button
+                          key={range.id}
+                          onClick={() => {
+                            setActivePriceRange(range.id);
+                            setIsFilterOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors hover:bg-secondary/40 flex items-center justify-between cursor-pointer ${
+                            activePriceRange === range.id ? "text-accent bg-secondary/20" : "text-foreground"
+                          }`}
+                        >
+                          <span>{range.label}</span>
+                          {activePriceRange === range.id && <Check size={12} className="text-accent" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Title of the Category or Search Results */}
+        {isBrowsingProducts && (
+          <h2 className="text-xl font-black text-foreground mb-3 capitalize">
+            {selectedCategory ? (
+              selectedCategory === "All" ? (lang === "mz" ? "A vaiin" : "All Products") : selectedCategory
+            ) : (
+              lang === "mz" ? "Zawn hmuhte" : "Search Results"
+            )}
+          </h2>
+        )}
+
         <div className="mb-3">
           <div className="w-full flex items-center gap-2 bg-card rounded-xl px-3 py-2.5 border border-border shadow-sm">
             <Search size={15} className="text-muted-foreground flex-shrink-0" />
-            <input type="text" placeholder={t("searchPlaceholder", lang)} value={search} onChange={handleSearchChange} className="flex-1 text-sm outline-none bg-transparent placeholder:text-muted-foreground" />
+            <input 
+              type="text" 
+              placeholder={t("searchPlaceholder", lang)} 
+              value={search} 
+              onChange={handleSearchChange} 
+              className="flex-1 text-sm outline-none bg-transparent placeholder:text-muted-foreground" 
+            />
+            {search && (
+              <button 
+                onClick={() => { setSearch(""); if (onSearchQueryChange) onSearchQueryChange(""); }} 
+                className="text-muted-foreground hover:text-foreground text-xs p-1"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 px-4 overflow-x-auto pb-2 mb-3" style={{ scrollbarWidth: "none" }}>
-        {CATEGORIES.map(cat => (
-          <button key={cat} onClick={() => setCategory(cat)} className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all ${category === cat ? "bg-primary text-white shadow-md" : "bg-card text-foreground border border-border hover:border-accent/30"}`}>
-            {cat === "All" ? (lang === "mz" ? "A vaiin" : "All") : cat}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-4 mb-3">
-        <p className="text-xs text-muted-foreground font-medium">{loading ? "Loading..." : `${filtered.length} ${lang === "mz" ? "thilte" : "products"}`}</p>
-      </div>
-
-      <div className="product-grid px-4">
-        {loading ? (
-          Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-        ) : filtered.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
-              <Search size={24} />
-            </div>
-            <h3 className="font-bold text-base text-foreground mb-1">
-              {lang === "mz" ? "Zawn hmuh a awm lo" : "No results found"}
+      {!isBrowsingProducts ? (
+        /* Category Cards View */
+        <div className="px-4 py-2 flex-1 animate-fade-in">
+          <div className="mb-5">
+            <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wider mb-2">
+              {lang === "mz" ? "Category Thlanna" : "Categories"}
             </h3>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              {lang === "mz" ? `"${search}" nen a inmil thil kan hmu lo e. Thildang tawngin han zawng chhin teh.` : `We couldn't find any products matching "${search}". Try searching for something else.`}
+            <p className="text-xs text-muted-foreground">
+              {lang === "mz" ? "I duh ber thlangin han browse teh" : "Select a category to browse products"}
             </p>
-            <button 
-              onClick={() => { setSearch(""); if (onSearchQueryChange) onSearchQueryChange(""); }} 
-              className="mt-4 text-xs font-bold text-accent hover:underline"
-            >
-              {lang === "mz" ? "Zawnna thai chhia rawh" : "Clear search"}
-            </button>
           </div>
-        ) : (
-          filtered.map(p => {
-            const firstImage = p.image ? p.image.split(",")[0].trim() : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&auto=format";
-            return (
-              <button key={p.id} onClick={() => onProductSelect(p)} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md hover:scale-[1.02] cursor-pointer duration-200 active:scale-95 transition-all text-left">
-                <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden">
-                  <img src={firstImage} alt={p.name} className="w-full h-full object-cover" />
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {CATEGORIES.map(cat => {
+              const icon = CATEGORY_ICONS[cat] || "🛍️";
+              const count = products.filter(p => cat === "All" ? true : p.category === cat).length;
+              const displayLabel = cat === "All" ? (lang === "mz" ? "A vaiin" : "All Products") : cat;
+              
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className="flex flex-col justify-between items-start p-5 h-36 bg-card rounded-2xl border border-border shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 hover:border-accent/40 cursor-pointer transition-all duration-200 text-left relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  
+                  <div className="flex items-center justify-between w-full">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
+                      {icon}
+                    </div>
+                    <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
+                  
+                  <div className="mt-3">
+                    <p className="font-black text-sm text-foreground group-hover:text-accent transition-colors duration-200 leading-tight">
+                      {displayLabel}
+                    </p>
+                    <p className="text-[10px] font-bold text-muted-foreground/80 mt-1 uppercase tracking-wider">
+                      {count} {lang === "mz" ? "thilte" : count === 1 ? "product" : "products"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Products Grid View */
+        <>
+          <div className="px-4 mb-3">
+            <p className="text-xs text-muted-foreground font-medium">
+              {loading ? (lang === "mz" ? "Zawn mek..." : "Loading...") : `${filtered.length} ${lang === "mz" ? "thilte" : "products"}`}
+            </p>
+          </div>
+
+          <div className="product-grid px-4">
+            {loading ? (
+              Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+            ) : filtered.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
+                  <Search size={24} />
                 </div>
-                <div className="p-3">
-                  <p className="font-semibold text-sm text-foreground leading-tight line-clamp-2 mb-1.5">{p.name}</p>
-                  <p className="font-black text-accent text-sm mt-1">{fmtPrice(p.price)}</p>
-                </div>
-              </button>
-            )
-          })
-        )}
-      </div>
+                <h3 className="font-bold text-base text-foreground mb-1">
+                  {lang === "mz" ? "Zawn hmuh a awm lo" : "No results found"}
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-xs">
+                  {lang === "mz" 
+                    ? `"${search}" nen a inmil thil kan hmu lo e. Thildang tawngin han zawng chhin teh.` 
+                    : `We couldn't find any products matching "${search}". Try searching for something else.`}
+                </p>
+                <button 
+                  onClick={() => { setSearch(""); if (onSearchQueryChange) onSearchQueryChange(""); setActivePriceRange("All"); }} 
+                  className="mt-4 text-xs font-bold text-accent hover:underline cursor-pointer"
+                >
+                  {lang === "mz" ? "Reset filter-te" : "Clear filters"}
+                </button>
+              </div>
+            ) : (
+              filtered.map(p => {
+                const firstImage = p.image ? p.image.split(",")[0].trim() : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&auto=format";
+                return (
+                  <button key={p.id} onClick={() => onProductSelect(p)} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md hover:scale-[1.02] cursor-pointer duration-200 active:scale-95 transition-all text-left">
+                    <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden">
+                      <img src={firstImage} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-3">
+                      <p className="font-semibold text-sm text-foreground leading-tight line-clamp-2 mb-1.5">{p.name}</p>
+                      <p className="font-black text-accent text-sm mt-1">{fmtPrice(p.price)}</p>
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </>
+      )}
       <Footer lang={lang} onNavigateTab={onNavigateTab} />
     </div>
   );
 }
+
 
 // ─── PRODUCT DETAIL ───────────────────────────────────────────────────────────
 
@@ -3317,6 +3510,9 @@ export default function App() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setScreen(tab);
+    if (tab === "shop") {
+      setShopInitCategory(undefined);
+    }
   };
 
   // CHECKOUT MUTATION
