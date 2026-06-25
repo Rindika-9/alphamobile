@@ -3926,7 +3926,7 @@ export default function App() {
           )}
           {/* Global Support Modals */}
           {showFooterAbout && <AboutUsModal onClose={() => setShowFooterAbout(false)} />}
-          {showFooterPrivacy && <PrivacyModal onClose={() => setShowFooterPrivacy(false)} />}
+          {showFooterPrivacy && <PrivacyPolicyModal onClose={() => setShowFooterPrivacy(false)} />}
           {showFooterTerms && <TermsModal onClose={() => setShowFooterTerms(false)} />}
           {showFooterFaq && <HelpCenterModal onClose={() => setShowFooterFaq(false)} />}
         </div>
@@ -4347,6 +4347,31 @@ function AboutUsModal({ onClose }: { onClose: () => void }) {
           <p>Located in Bazar Bungkawn, Aizawl, Mizoram, Alpha Mobile is your premier destination for high-quality secondhand and brand new mobile phones, premium chargers, and authentic accessories.</p>
           <p>We pride ourselves on offering reliable, thoroughly tested pre-owned smartphones at competitive prices, backed by our local shop warranty and dedicated customer service.</p>
           <p>Whether you're looking to upgrade to the latest model, purchase premium accessories, or require professional mobile repairs, Alpha Mobile has you covered. Visit us or browse our store online to experience the best deals today!</p>
+        </div>
+        <button onClick={onClose} className="w-full bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in text-left">
+      <div className="bg-card border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4 animate-scale-in">
+        <h3 className="font-black text-lg text-foreground">Privacy Policy</h3>
+        <div className="max-h-60 overflow-y-auto text-xs text-muted-foreground leading-relaxed pr-2 space-y-3" style={{ scrollbarWidth: "thin" }}>
+          <p className="font-bold text-foreground">Last Updated: June 25, 2026</p>
+          <p>Alpha Mobile values your privacy. This Privacy Policy details how we collect, use, and protect your information when you purchase from our store or use our online application.</p>
+          <p className="font-bold text-foreground">1. Information We Collect</p>
+          <p>We collect personal information that you provide to us, including your full name, Gmail address, contact number, delivery address, and pincode when you create an account or place an order.</p>
+          <p className="font-bold text-foreground">2. How We Use Your Information</p>
+          <p>Your details are used solely to process your orders, contact you for delivery coordinates, manage your account, and provide updates regarding your order status via notifications.</p>
+          <p className="font-bold text-foreground">3. Information Sharing</p>
+          <p>We do not sell, lease, or share your personal information with third parties. Your data is kept strictly secure on our databases and only accessed by authorized Alpha Mobile administrators for processing order fulfillments.</p>
+          <p className="font-bold text-foreground">4. Security of Data</p>
+          <p>We implement standard, modern security measures to safeguard your credentials and personal info. You are responsible for keeping your login password confidential.</p>
         </div>
         <button onClick={onClose} className="w-full bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">
           Close
