@@ -386,24 +386,36 @@ function Footer({ lang, onNavigateTab }: { lang: "en" | "mz"; onNavigateTab?: (t
             <h5 className="text-[11px] font-black text-amber-400 uppercase tracking-wider mb-4">{lang === "mz" ? "TANPUINA" : "SUPPORT"}</h5>
             <ul className="space-y-2.5 font-bold text-white/70">
               <li>
-                <a href="#about" className="hover:text-white transition-colors block">
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "about" }))} 
+                  className="hover:text-white transition-colors block text-left bg-transparent border-0 p-0 cursor-pointer text-xs"
+                >
                   {lang === "mz" ? "Kan chanchin" : "About Us"}
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#privacy" className="hover:text-white transition-colors block">
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "privacy" }))} 
+                  className="hover:text-white transition-colors block text-left bg-transparent border-0 p-0 cursor-pointer text-xs"
+                >
                   {lang === "mz" ? "Privacy Policy" : "Privacy Policy"}
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#terms" className="hover:text-white transition-colors block">
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "terms" }))} 
+                  className="hover:text-white transition-colors block text-left bg-transparent border-0 p-0 cursor-pointer text-xs"
+                >
                   {lang === "mz" ? "Terms of Service" : "Terms of Service"}
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#faq" className="hover:text-white transition-colors block">
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "faq" }))} 
+                  className="hover:text-white transition-colors block text-left bg-transparent border-0 p-0 cursor-pointer text-xs"
+                >
                   {lang === "mz" ? "Zawhna Te" : "FAQ"}
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -3045,6 +3057,23 @@ export default function App() {
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [isAdminNotifDrawerOpen, setIsAdminNotifDrawerOpen] = useState(false);
 
+  const [showFooterAbout, setShowFooterAbout] = useState(false);
+  const [showFooterPrivacy, setShowFooterPrivacy] = useState(false);
+  const [showFooterTerms, setShowFooterTerms] = useState(false);
+  const [showFooterFaq, setShowFooterFaq] = useState(false);
+
+  useEffect(() => {
+    const handleOpenModal = (e: Event) => {
+      const type = (e as CustomEvent).detail;
+      if (type === "about") setShowFooterAbout(true);
+      if (type === "privacy") setShowFooterPrivacy(true);
+      if (type === "terms") setShowFooterTerms(true);
+      if (type === "faq") setShowFooterFaq(true);
+    };
+    window.addEventListener("open-footer-modal", handleOpenModal);
+    return () => window.removeEventListener("open-footer-modal", handleOpenModal);
+  }, []);
+
   const addNotification = (title: string, message: string, type: "admin" | "customer", orderId: string, customerEmail?: string) => {
     const newNotif: AppNotification = {
       id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -3895,6 +3924,11 @@ export default function App() {
               </div>
             </div>
           )}
+          {/* Global Support Modals */}
+          {showFooterAbout && <AboutUsModal onClose={() => setShowFooterAbout(false)} />}
+          {showFooterPrivacy && <PrivacyModal onClose={() => setShowFooterPrivacy(false)} />}
+          {showFooterTerms && <TermsModal onClose={() => setShowFooterTerms(false)} />}
+          {showFooterFaq && <HelpCenterModal onClose={() => setShowFooterFaq(false)} />}
         </div>
       </div>
     </>
@@ -3919,6 +3953,7 @@ function CustomerAuthScreen({
   const [phone, setPhone] = useState("");
   const [pincode, setPincode] = useState("");
   const [address, setAddress] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
 
   const handleAuth = () => {
@@ -3940,6 +3975,10 @@ function CustomerAuthScreen({
       if (!phone.trim()) { setError(lang === "mz" ? "Phone number ziak a ngai e." : "Phone number is required."); return; }
       if (!pincode.trim()) { setError(lang === "mz" ? "Pincode ziak a ngai e." : "Pincode is required."); return; }
       if (!address.trim()) { setError(lang === "mz" ? "Address ziak a ngai e." : "Address is required."); return; }
+      if (!acceptedTerms) {
+        setError(lang === "mz" ? "Terms leh Privacy Policy i pawm hmasak a ngai e." : "You must accept the Terms of Service and Privacy Policy to continue.");
+        return;
+      }
 
       // Register new user locally
       const newUser = {
@@ -4034,6 +4073,34 @@ function CustomerAuthScreen({
               <div>
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1.5 block">{lang === "mz" ? "Pincode" : "Pincode"}</label>
                 <input type="text" placeholder="796001" value={pincode} onChange={e => setPincode(e.target.value)} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+              </div>
+
+              <div className="flex items-start gap-2.5 pt-1">
+                <input 
+                  type="checkbox" 
+                  id="acceptTerms" 
+                  checked={acceptedTerms} 
+                  onChange={e => setAcceptedTerms(e.target.checked)} 
+                  className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-accent"
+                />
+                <label htmlFor="acceptTerms" className="text-xs text-muted-foreground leading-tight select-none">
+                  {lang === "mz" ? (
+                    <>
+                      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "terms" }))} className="text-primary font-bold hover:underline">Terms of Service</button>
+                      {" leh "}
+                      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "privacy" }))} className="text-primary font-bold hover:underline">Privacy Policy</button>
+                      {" te hi ka pawm e."}
+                    </>
+                  ) : (
+                    <>
+                      I accept the {" "}
+                      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "terms" }))} className="text-primary font-bold hover:underline">Terms of Service</button>
+                      {" and "}
+                      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "privacy" }))} className="text-primary font-bold hover:underline">Privacy Policy</button>
+                      {"."}
+                    </>
+                  )}
+                </label>
               </div>
             </>
           )}
@@ -4265,6 +4332,25 @@ function ContactSupportModal({ currentUser, onClose }: { currentUser: any; onClo
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function AboutUsModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in text-left">
+      <div className="bg-card border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4 animate-scale-in">
+        <h3 className="font-black text-lg text-foreground">About Us</h3>
+        <div className="max-h-60 overflow-y-auto text-xs text-muted-foreground leading-relaxed pr-2 space-y-3" style={{ scrollbarWidth: "thin" }}>
+          <p className="font-bold text-foreground">Welcome to Alpha Mobile!</p>
+          <p>Located in Bazar Bungkawn, Aizawl, Mizoram, Alpha Mobile is your premier destination for high-quality secondhand and brand new mobile phones, premium chargers, and authentic accessories.</p>
+          <p>We pride ourselves on offering reliable, thoroughly tested pre-owned smartphones at competitive prices, backed by our local shop warranty and dedicated customer service.</p>
+          <p>Whether you're looking to upgrade to the latest model, purchase premium accessories, or require professional mobile repairs, Alpha Mobile has you covered. Visit us or browse our store online to experience the best deals today!</p>
+        </div>
+        <button onClick={onClose} className="w-full bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">
+          Close
+        </button>
       </div>
     </div>
   );
