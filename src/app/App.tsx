@@ -644,6 +644,60 @@ function HomeScreen({
           )}
         </div>
       </div>
+
+      {/* Powered by eXfirm Sliding Marquee */}
+      <div className="overflow-hidden w-full py-4 border-y border-border/40 bg-card/20 mb-5 relative flex items-center">
+        <style>{`
+          @keyframes marquee-left-to-right {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0%); }
+          }
+          .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: marquee-left-to-right 25s linear infinite;
+          }
+        `}</style>
+        {/* Gradients to fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        
+        <div className="marquee-track">
+          {/* First loop */}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={`m1-${i}`} className="flex items-center gap-2 mx-8 flex-shrink-0">
+              <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">POWERED BY</span>
+              <a href="https://instagram.com/exfirm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                <div className="w-4 h-4 rounded-[5px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white flex-shrink-0">
+                  <svg className="w-2.5 h-2.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </div>
+                <span className="text-xs font-black text-foreground uppercase tracking-wide">eXfirm</span>
+              </a>
+            </div>
+          ))}
+          {/* Second loop (exact duplicate for infinite scroll) */}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={`m2-${i}`} className="flex items-center gap-2 mx-8 flex-shrink-0">
+              <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">POWERED BY</span>
+              <a href="https://instagram.com/exfirm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                <div className="w-4 h-4 rounded-[5px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white flex-shrink-0">
+                  <svg className="w-2.5 h-2.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </div>
+                <span className="text-xs font-black text-foreground uppercase tracking-wide">eXfirm</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Footer */}
       <Footer lang={lang} onNavigateTab={onNavigateTab} />
     </div>
