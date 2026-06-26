@@ -304,8 +304,8 @@ function Badge({ status }: { status: Order["status"] }) {
 function ProductCard({ product, onSelect }: { product: Product; onSelect: () => void }) {
   const firstImage = product.image ? product.image.split(",")[0].trim() : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&auto=format";
   return (
-    <button onClick={onSelect} className="flex-shrink-0 w-44 bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md hover:scale-[1.02] cursor-pointer duration-200 active:scale-95 transition-all text-left">
-      <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden">
+    <button onClick={onSelect} className="flex-shrink-0 w-44 glass-card rounded-2xl overflow-hidden text-left cursor-pointer">
+      <div className="relative w-full aspect-[3/4] bg-white/5 overflow-hidden">
         <img src={firstImage} alt={product.name} className="w-full h-full object-cover" />
       </div>
       <div className="p-3">
@@ -318,16 +318,16 @@ function ProductCard({ product, onSelect }: { product: Product; onSelect: () => 
 
 function ProductCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-44 bg-card rounded-2xl border border-border overflow-hidden animate-pulse">
-      <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
+    <div className="flex-shrink-0 w-44 glass-card rounded-2xl overflow-hidden animate-pulse">
+      <div className="relative w-full aspect-[3/4] bg-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
       </div>
       <div className="p-3 space-y-2">
-        <div className="h-4 bg-muted rounded w-5/6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
+        <div className="h-4 bg-white/5 rounded w-5/6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
         </div>
-        <div className="h-3 bg-muted rounded w-1/2 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
+        <div className="h-3 bg-white/5 rounded w-1/2 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
         </div>
       </div>
     </div>
@@ -567,16 +567,16 @@ function HomeScreen({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button 
             onClick={() => onLanguageChange(lang === "mz" ? "en" : "mz")}
-            className="w-11 h-11 rounded-2xl bg-card shadow-md border border-border flex items-center justify-center font-black text-xs text-foreground hover:bg-secondary active:scale-95 transition-all"
+            className="w-11 h-11 rounded-2xl glass-button flex items-center justify-center font-black text-xs hover:scale-95 duration-200 active:scale-90 transition-all"
             title={lang === "mz" ? "Switch to English" : "Tawng Mizo tawngah thlak rawh"}
           >
             {lang === "mz" ? "EN" : "MZ"}
           </button>
-          <button onClick={onNotifOpen} className="relative w-11 h-11 rounded-2xl bg-card shadow-md border border-border flex items-center justify-center">
+          <button onClick={onNotifOpen} className="relative w-11 h-11 rounded-2xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all">
             <Bell size={18} className="text-foreground" />
             {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center animate-pulse">{unreadCount}</span>}
           </button>
-          <button onClick={onCartOpen} className="relative w-11 h-11 rounded-2xl bg-card shadow-md border border-border flex items-center justify-center">
+          <button onClick={onCartOpen} className="relative w-11 h-11 rounded-2xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all">
             <ShoppingCart size={18} className="text-foreground" />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">{cartCount}</span>}
           </button>
@@ -584,16 +584,16 @@ function HomeScreen({
       </div>
 
       {/* Hero Banner */}
-      <div className="mx-4 mb-5 rounded-3xl overflow-hidden relative h-52 shadow-2xl">
+      <div className="mx-4 mb-5 rounded-3xl overflow-hidden relative h-52 border border-white/10 shadow-2xl">
         {activeBanners.map((h: any, i: number) => (
           <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === heroIdx ? "opacity-100" : "opacity-0"}`}>
             <img src={h.img.startsWith("http") ? h.img : `https://images.unsplash.com/photo-${h.img}?w=800&h=450&fit=crop&auto=format`} alt={h.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-950/40 to-transparent" />
             <div className="absolute inset-0 p-5 flex flex-col justify-end">
               <p className="text-blue-300 text-[10px] font-black uppercase tracking-widest mb-1">{lang === "mz" ? "Thlanchhuahte" : "Featured"}</p>
               <h2 className="text-white text-xl font-black leading-tight">{h.title}</h2>
               <p className="text-blue-100/80 text-xs mt-0.5 mb-3">{h.sub}</p>
-              <button onClick={() => onNavigateShop()} className="self-start bg-white text-primary text-xs font-black px-5 py-2 rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all">
+              <button onClick={() => onNavigateShop()} className="self-start bg-blue-600 text-white text-xs font-black px-5 py-2 rounded-full shadow-lg hover:shadow-xl hover:bg-blue-700 active:scale-95 transition-all">
                 {t("shopNow", lang)}
               </button>
             </div>
@@ -620,7 +620,7 @@ function HomeScreen({
             { l: lang === "mz" ? "Speaker" : "Speakers", e: "🔊", cat: "Speakers" },
             { l: lang === "mz" ? "Hmanruate" : "Accessories", e: "⚡", cat: "iPhone Accessories" }
           ].map(c => (
-            <button key={c.l} onClick={() => onNavigateShop(c.cat)} className="flex-shrink-0 flex flex-col items-center gap-1.5 bg-card rounded-2xl p-3 w-16 shadow-sm border border-border hover:border-accent/30 hover:scale-[1.02] cursor-pointer duration-200 active:scale-95 transition-all">
+            <button key={c.l} onClick={() => onNavigateShop(c.cat)} className="flex-shrink-0 flex flex-col items-center gap-1.5 glass-card rounded-2xl p-3 w-16 cursor-pointer">
               <span className="text-2xl">{c.e}</span>
               <span className="text-[10px] font-bold text-foreground text-center leading-tight">{c.l}</span>
             </button>
@@ -810,12 +810,12 @@ function ShopScreen({
 
   return (
     <div className="flex-1 overflow-y-auto pb-4 md:pb-6" style={{ scrollbarWidth: "none" }}>
-      <div className="px-4 pb-3 bg-background sticky top-0 z-10 pt-4 md:pt-2">
+      <div className="px-4 pb-3 sticky top-0 z-10 pt-4 md:pt-2 bg-background/80 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center justify-between mb-3 min-h-[38px]">
           {isBrowsingProducts ? (
             <button 
               onClick={handleBack} 
-              className="flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-secondary/50 px-3.5 py-2 rounded-full border border-border"
+              className="flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer glass-button px-3.5 py-2 rounded-full shadow-sm"
             >
               <ArrowLeft size={14} />
               <span>{lang === "mz" ? "Category thlanna" : "Back to Categories"}</span>
@@ -831,8 +831,8 @@ function ShopScreen({
                 onClick={() => setIsFilterOpen(!isFilterOpen)} 
                 className={`flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-full border transition-all cursor-pointer ${
                   activePriceRange !== "All" 
-                    ? "bg-primary text-white border-primary shadow-md" 
-                    : "bg-card text-foreground border border-border hover:border-accent/30"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md" 
+                    : "glass-button hover:border-white/20"
                 }`}
               >
                 <Filter size={13} />
@@ -847,8 +847,8 @@ function ShopScreen({
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 py-2 animate-fade-in">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-4 py-1.5 border-b border-border/50">
+                  <div className="absolute right-0 mt-2 w-52 glass-card rounded-2xl shadow-2xl z-20 py-2 animate-fade-in backdrop-blur-3xl">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-4 py-1.5 border-b border-white/5">
                       {lang === "mz" ? "Man bit zat thlanna" : "Price Filter"}
                     </p>
                     <div className="max-h-60 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -859,12 +859,12 @@ function ShopScreen({
                             setActivePriceRange(range.id);
                             setIsFilterOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors hover:bg-secondary/40 flex items-center justify-between cursor-pointer ${
-                            activePriceRange === range.id ? "text-accent bg-secondary/20" : "text-foreground"
+                          className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors hover:bg-white/5 flex items-center justify-between cursor-pointer ${
+                            activePriceRange === range.id ? "text-blue-400 bg-white/5" : "text-foreground"
                           }`}
                         >
                           <span>{range.label}</span>
-                          {activePriceRange === range.id && <Check size={12} className="text-accent" />}
+                          {activePriceRange === range.id && <Check size={12} className="text-blue-400" />}
                         </button>
                       ))}
                     </div>
@@ -887,7 +887,7 @@ function ShopScreen({
         )}
 
         <div className="mb-3">
-          <div className="w-full flex items-center gap-2 bg-card rounded-xl px-3 py-2.5 border border-border shadow-sm">
+          <div className="w-full flex items-center gap-2 glass-input rounded-xl px-3 py-2.5 shadow-sm">
             <Search size={15} className="text-muted-foreground flex-shrink-0" />
             <input 
               type="text" 
@@ -930,19 +930,19 @@ function ShopScreen({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className="flex flex-col justify-between items-start p-5 h-36 bg-card rounded-2xl border border-border shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 hover:border-accent/40 cursor-pointer transition-all duration-200 text-left relative overflow-hidden group"
+                  className="flex flex-col justify-between items-start p-5 h-36 glass-card rounded-2xl cursor-pointer transition-all duration-200 text-left relative overflow-hidden group"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   
                   <div className="flex items-center justify-between w-full">
-                    <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
                       {icon}
                     </div>
-                    <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all duration-300" />
+                    <ChevronRight size={16} className="text-muted-foreground group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-300" />
                   </div>
                   
                   <div className="mt-3">
-                    <p className="font-black text-sm text-foreground group-hover:text-accent transition-colors duration-200 leading-tight">
+                    <p className="font-black text-sm text-foreground group-hover:text-blue-400 transition-colors duration-200 leading-tight">
                       {displayLabel}
                     </p>
                     <p className="text-[10px] font-bold text-muted-foreground/80 mt-1 uppercase tracking-wider">
@@ -968,7 +968,7 @@ function ShopScreen({
               Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
             ) : filtered.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 text-muted-foreground border border-white/10">
                   <Search size={24} />
                 </div>
                 <h3 className="font-bold text-base text-foreground mb-1">
@@ -981,26 +981,15 @@ function ShopScreen({
                 </p>
                 <button 
                   onClick={() => { setSearch(""); if (onSearchQueryChange) onSearchQueryChange(""); setActivePriceRange("All"); }} 
-                  className="mt-4 text-xs font-bold text-accent hover:underline cursor-pointer"
+                  className="mt-4 text-xs font-bold text-blue-400 hover:underline cursor-pointer"
                 >
                   {lang === "mz" ? "Reset filter-te" : "Clear filters"}
                 </button>
               </div>
             ) : (
-              filtered.map(p => {
-                const firstImage = p.image ? p.image.split(",")[0].trim() : "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&auto=format";
-                return (
-                  <button key={p.id} onClick={() => onProductSelect(p)} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md hover:scale-[1.02] cursor-pointer duration-200 active:scale-95 transition-all text-left">
-                    <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden">
-                      <img src={firstImage} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-3">
-                      <p className="font-semibold text-sm text-foreground leading-tight line-clamp-2 mb-1.5">{p.name}</p>
-                      <p className="font-black text-accent text-sm mt-1">{fmtPrice(p.price)}</p>
-                    </div>
-                  </button>
-                )
-              })
+              filtered.map(p => (
+                <ProductCard key={p.id} product={p} onSelect={() => onProductSelect(p)} />
+              ))
             )}
           </div>
         </>
@@ -1030,12 +1019,12 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
       <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 md:p-6 items-stretch">
         
         {/* Left Side: Image Carousel */}
-        <div className="relative w-full aspect-[3/4] md:aspect-square bg-muted overflow-hidden md:rounded-3xl group flex-shrink-0 shadow-md">
+        <div className="relative w-full aspect-[3/4] md:aspect-square bg-white/5 overflow-hidden md:rounded-3xl group flex-shrink-0 shadow-md border border-white/10">
           <img src={images[activeImgIdx]} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
           
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-            <button onClick={onBack} className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center text-foreground hover:bg-white active:scale-95 transition-all">
+            <button onClick={onBack} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-md flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all">
               <ArrowLeft size={18} />
             </button>
             <div className="flex gap-2">
@@ -1053,12 +1042,12 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
                     alert(lang === "mz" ? "Link copy a ni e!" : "Link copied to clipboard!");
                   }
                 }}
-                className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center text-foreground hover:bg-white active:scale-95 transition-all"
+                className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-md flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all"
               >
                 <Share2 size={16} />
               </button>
-              <button onClick={() => onWishlist(product.id)} className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center text-foreground hover:bg-white active:scale-95 transition-all">
-                <Heart size={16} className={isWished ? "fill-red-500 text-red-500" : "text-foreground"} />
+              <button onClick={() => onWishlist(product.id)} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-md flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all">
+                <Heart size={16} className={isWished ? "fill-red-500 text-red-500" : "text-white"} />
               </button>
             </div>
           </div>
@@ -1067,13 +1056,13 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
             <>
               <button 
                 onClick={() => setActiveImgIdx(prev => (prev - 1 + images.length) % images.length)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors active:scale-90"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-black/60 transition-colors active:scale-90"
               >
                 <ChevronLeft size={20} />
               </button>
               <button 
                 onClick={() => setActiveImgIdx(prev => (prev + 1) % images.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors active:scale-90"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-black/60 transition-colors active:scale-90"
               >
                 <ChevronRight size={20} />
               </button>
@@ -1097,17 +1086,17 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
             <h1 className="text-2xl font-black text-foreground leading-tight mb-2">{product.name}</h1>
             
             <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-3xl font-black text-accent">{fmtPrice(product.price)}</span>
+              <span className="text-3xl font-black text-blue-400">{fmtPrice(product.price)}</span>
             </div>
 
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">{product.description}</p>
             
             {product.specs && Object.keys(product.specs).length > 0 && (
-              <div className="mt-6 border-t border-border pt-4">
+              <div className="mt-6 border-t border-white/5 pt-4">
                 <h3 className="font-bold text-sm text-foreground mb-3">{lang === "mz" ? "Technical Specs" : "Specifications"}</h3>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {Object.entries(product.specs).map(([k, v]) => (
-                    <div key={k} className="bg-muted/50 p-2.5 rounded-xl border border-border/15">
+                    <div key={k} className="bg-white/5 p-2.5 rounded-xl border border-white/10">
                       <span className="text-muted-foreground block text-[9px] uppercase font-black tracking-wider mb-0.5">{k}</span>
                       <span className="font-semibold text-foreground">{v}</span>
                     </div>
@@ -1121,7 +1110,7 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
           <div className="hidden md:block mt-8">
             <button 
               onClick={() => onAddToCart(product, 1)} 
-              className="w-full bg-primary hover:bg-primary/95 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all"
             >
               <ShoppingCart size={18} /> {lang === "mz" ? "Cart-ah dah rawh —" : "Add to Cart —"} {fmtPrice(product.price)}
             </button>
@@ -1131,8 +1120,8 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
       </div>
 
       {/* Mobile fixed bottom bar */}
-      <div className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4 pb-6 pt-3 bg-background/95 backdrop-blur-sm border-t border-border z-20">
-        <button onClick={() => onAddToCart(product, 1)} className="w-full bg-primary text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all">
+      <div className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4 pb-6 pt-3 bg-background/80 backdrop-blur-md border-t border-white/5 z-20">
+        <button onClick={() => onAddToCart(product, 1)} className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all">
           <ShoppingCart size={18} /> {lang === "mz" ? "Cart-ah dah rawh —" : "Add to Cart —"} {fmtPrice(product.price)}
         </button>
       </div>
@@ -1175,18 +1164,18 @@ function CartScreen({ cart, onQtyChange, onRemove, onCheckout, onBack, coupons, 
     <div className="flex-grow flex flex-col overflow-hidden h-full relative">
       <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: "none" }}>
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-          <button onClick={onBack} className="w-11 h-11 rounded-xl bg-card shadow-sm border border-border flex items-center justify-center hover:bg-muted active:scale-95 transition-all"><ArrowLeft size={18} /></button>
+          <button onClick={onBack} className="w-11 h-11 rounded-xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all"><ArrowLeft size={18} /></button>
           <div><h2 className="text-xl font-black">{t("myCart", lang)}</h2><p className="text-xs text-muted-foreground">{cart.reduce((s, i) => s + i.qty, 0)} {lang === "mz" ? "thilte" : "items"}</p></div>
         </div>
 
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-            <div className="w-24 h-24 rounded-3xl bg-secondary flex items-center justify-center mb-5 shadow-sm"><ShoppingCart size={40} className="text-muted-foreground" /></div>
+            <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-5 shadow-sm"><ShoppingCart size={40} className="text-muted-foreground" /></div>
             <h3 className="text-xl font-black mb-2">{t("emptyCart", lang)}</h3>
             <p className="text-muted-foreground text-sm">{lang === "mz" ? "I cart-ah thil thlangin dah lut rawh." : "Add products to your cart to get started."}</p>
             <button 
               onClick={onBack} 
-              className="mt-6 bg-primary text-white text-xs font-black px-6 py-3 rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
+              className="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-6 py-3 rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
             >
               {lang === "mz" ? "Dawr tlawh rawh →" : "Browse phones →"}
             </button>
@@ -1195,19 +1184,19 @@ function CartScreen({ cart, onQtyChange, onRemove, onCheckout, onBack, coupons, 
           <>
             <div className="space-y-3 px-4 mb-4">
               {cart.map(({ product, qty }) => (
-                <div key={product.id} className="bg-card rounded-2xl p-3 shadow-sm border border-border flex gap-3">
-                  <img src={product.image} alt={product.name} className="w-20 h-20 rounded-xl object-cover bg-muted flex-shrink-0" />
+                <div key={product.id} className="glass-card rounded-2xl p-3 shadow-sm flex gap-3">
+                  <img src={product.image} alt={product.name} className="w-20 h-20 rounded-xl object-cover bg-white/5 border border-white/5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-1">
                       <div className="min-w-0"><p className="text-[10px] text-muted-foreground">{product.brand}</p><p className="font-bold text-sm text-foreground leading-tight line-clamp-2">{product.name}</p></div>
                       <button onClick={() => onRemove(product.id)} className="flex-shrink-0 text-muted-foreground hover:text-red-500 transition-colors"><X size={16} /></button>
                     </div>
-                    <p className="font-black text-accent mt-1">{fmtPrice(product.price)}</p>
+                    <p className="font-black text-blue-400 mt-1">{fmtPrice(product.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center gap-1.5 bg-secondary rounded-lg p-0.5">
-                        <button onClick={() => onQtyChange(product.id, Math.max(1, qty - 1))} className="w-6 h-6 rounded-md bg-card flex items-center justify-center shadow-sm active:scale-90 transition-transform"><Minus size={11} /></button>
+                      <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg p-0.5">
+                        <button onClick={() => onQtyChange(product.id, Math.max(1, qty - 1))} className="w-6 h-6 rounded-md glass-button flex items-center justify-center shadow-sm active:scale-90 transition-transform"><Minus size={11} /></button>
                         <span className="font-black text-xs w-4 text-center">{qty}</span>
-                        <button onClick={() => onQtyChange(product.id, qty + 1)} className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shadow-sm active:scale-90 transition-transform"><Plus size={11} className="text-white" /></button>
+                        <button onClick={() => onQtyChange(product.id, qty + 1)} className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shadow-sm active:scale-90 transition-transform"><Plus size={11} className="text-white" /></button>
                       </div>
                       <span className="text-xs text-muted-foreground font-semibold">{fmtPrice(product.price * qty)}</span>
                     </div>
@@ -1217,35 +1206,35 @@ function CartScreen({ cart, onQtyChange, onRemove, onCheckout, onBack, coupons, 
             </div>
 
             <div className="mx-4 mb-4 flex gap-2">
-              <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 shadow-sm">
+              <div className="flex-1 flex items-center gap-2 glass-input rounded-xl px-3 py-2.5 shadow-sm">
                 <Tag size={13} className="text-muted-foreground flex-shrink-0" />
                 <input type="text" placeholder={lang === "mz" ? "Coupon code (EXCART10 han chhin rawh)" : "Coupon code (try EXCART10)"} value={coupon} onChange={e => setCoupon(e.target.value)} className="flex-1 text-sm outline-none bg-transparent" />
               </div>
-              <button onClick={applyCoupon} className="px-4 bg-primary text-white text-sm font-black rounded-xl shadow-md hover:bg-primary/90 active:scale-95 transition-transform">{lang === "mz" ? "Hmanna" : "Apply"}</button>
+              <button onClick={applyCoupon} className="px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black rounded-xl shadow-md active:scale-95 transition-all">{lang === "mz" ? "Hmanna" : "Apply"}</button>
             </div>
-            {couponMsg && <p className={`text-xs font-bold mx-4 mb-3 flex items-center gap-1 ${discount > 0 ? 'text-green-600' : 'text-red-500'}`}>{couponMsg} {discount > 0 && `— ${lang === "mz" ? "I khawlkhawm zat" : "Saved"} ${fmtPrice(discount)}`}</p>}
+            {couponMsg && <p className={`text-xs font-bold mx-4 mb-3 flex items-center gap-1 ${discount > 0 ? 'text-green-400' : 'text-red-500'}`}>{couponMsg} {discount > 0 && `— ${lang === "mz" ? "I khawlkhawm zat" : "Saved"} ${fmtPrice(discount)}`}</p>}
 
-            <div className="mx-4 mb-4 bg-card rounded-2xl p-4 shadow-sm border border-border">
+            <div className="mx-4 mb-4 glass-card rounded-2xl p-4 shadow-sm">
               <h4 className="font-black text-sm mb-3">{t("orderSummary", lang)}</h4>
               {[
                 { label: lang === "mz" ? "Subtotal" : "Subtotal", val: fmtPrice(subtotal) },
                 { label: lang === "mz" ? "Thawn man" : "Shipping", val: shipping === 0 ? (lang === "mz" ? "A thlawn 🎉" : "Free 🎉") : fmtPrice(shipping) },
                 ...(discount > 0 ? [{ label: lang === "mz" ? "Tlawmna" : "Discount", val: `-${fmtPrice(discount)}` }] : []),
               ].map(r => (
-                <div key={r.label} className="flex justify-between py-2 border-b border-border last:border-0">
+                <div key={r.label} className="flex justify-between py-2 border-b border-white/5 last:border-0">
                   <span className="text-sm text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.label === "Discount" || r.label === "Tlawmna" ? "text-green-600" : "text-foreground"}`}>{r.val}</span>
+                  <span className={`text-sm font-bold ${r.label === "Discount" || r.label === "Tlawmna" ? "text-green-400" : "text-foreground"}`}>{r.val}</span>
                 </div>
               ))}
-              <div className="flex justify-between pt-3"><span className="font-black text-base">{t("total", lang)}</span><span className="font-black text-base text-accent">{fmtPrice(total)}</span></div>
+              <div className="flex justify-between pt-3 border-t border-white/5"><span className="font-black text-base">{t("total", lang)}</span><span className="font-black text-base text-blue-400">{fmtPrice(total)}</span></div>
             </div>
           </>
         )}
       </div>
 
       {cart.length > 0 && (
-        <div className="bg-background/95 backdrop-blur-sm border-t border-border px-4 pb-6 pt-3 z-20 flex-shrink-0">
-          <button onClick={onCheckout} className="w-full bg-primary hover:bg-primary/95 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all">
+        <div className="bg-background/80 backdrop-blur-md border-t border-white/5 px-4 pb-6 pt-3 z-20 flex-shrink-0">
+          <button onClick={onCheckout} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all">
             {t("proceedCheckout", lang)} <ChevronRight size={18} />
           </button>
         </div>
@@ -1300,17 +1289,17 @@ function CheckoutScreen({
     <div className="flex-grow flex flex-col overflow-hidden h-full relative">
       <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: "none" }}>
         <div className="flex items-center gap-3 px-4 pt-4 pb-4">
-          <button onClick={onBack} className="w-11 h-11 rounded-xl bg-card shadow-sm border border-border flex items-center justify-center hover:bg-muted active:scale-95 transition-all"><ArrowLeft size={18} /></button>
+          <button onClick={onBack} className="w-11 h-11 rounded-xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all"><ArrowLeft size={18} /></button>
           <h2 className="font-black text-xl">{t("checkout", lang)}</h2>
         </div>
 
         <div className="flex items-center px-4 mb-6">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${i < step ? "bg-green-500 text-white" : i === step ? "bg-primary text-white" : "bg-secondary text-muted-foreground"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${i < step ? "bg-green-500 text-white" : i === step ? "bg-blue-600 text-white" : "bg-white/5 border border-white/10 text-muted-foreground"}`}>
                 {i < step ? <Check size={13} /> : i + 1}
               </div>
-              {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-1 rounded transition-colors ${i < step ? "bg-green-500" : "bg-border"}`} />}
+              {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-1 rounded transition-colors ${i < step ? "bg-green-500" : "bg-white/5"}`} />}
             </div>
           ))}
         </div>
@@ -1322,23 +1311,23 @@ function CheckoutScreen({
               
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Hming Pum" : "Full Name"}</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Phone Number" : "Phone"}</label>
-                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Address Kimchang" : "Street Address"}</label>
-                <input type="text" value={street} onChange={e => setStreet(e.target.value)} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+                <input type="text" value={street} onChange={e => setStreet(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Khua / Veng" : "City"}</label>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+                <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "State / Pin Code" : "State / ZIP"}</label>
-                <input type="text" value={stateZip} onChange={e => setStateZip(e.target.value)} className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+                <input type="text" value={stateZip} onChange={e => setStateZip(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
             </div>
           )}
@@ -1350,10 +1339,10 @@ function CheckoutScreen({
                   enableUpi ? { id: "gpay" as const, label: "UPI / Google Pay", icon: "💳", desc: lang === "mz" ? "GPay, PhonePe, QR hmanga pay nghalna" : "Instant payment with GPay, PhonePe, QR" } : null,
                   enableCod ? { id: "cod" as const, label: "Cash On Delivery", icon: "💵", desc: lang === "mz" ? "Thil a thlen huna pawisa pek mai tur" : "Pay when your order arrives" } : null,
                 ].filter(Boolean).map(m => m && (
-                  <button key={m.id} onClick={() => setPayment(m.id)} className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${payment === m.id ? "border-accent bg-accent/5" : "border-border bg-card"}`}>
+                  <button key={m.id} onClick={() => setPayment(m.id)} className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${payment === m.id ? "border-blue-500 bg-white/10" : "border-white/10 bg-white/5"}`}>
                     <span className="text-3xl">{m.icon}</span>
                     <div className="flex-1"><p className="font-black text-sm">{m.label}</p><p className="text-xs text-muted-foreground">{m.desc}</p></div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${payment === m.id ? "border-accent bg-accent" : "border-border"}`}>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${payment === m.id ? "border-blue-500 bg-blue-600" : "border-white/20"}`}>
                       {payment === m.id && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </button>
@@ -1373,7 +1362,7 @@ function CheckoutScreen({
               
               {/* Show UPI Details if selected */}
               {payment === "gpay" && (
-                <div className="bg-card border border-border rounded-2xl p-4 mb-4 shadow-sm text-center flex flex-col items-center">
+                <div className="glass-card rounded-2xl p-4 mb-4 shadow-sm text-center flex flex-col items-center">
                   <div className="flex items-center justify-center gap-1.5 mb-2.5">
                     <span className="bg-[#1A73E8] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm">GPay</span>
                     <span className="bg-[#5f259f] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm">PhonePe</span>
@@ -1384,7 +1373,7 @@ function CheckoutScreen({
                   <p className="text-xs font-bold text-muted-foreground mb-3">{t("scanQrCode", lang)}</p>
                   
                   {/* QR Code */}
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm inline-block mb-3.5 relative group">
+                  <div className="bg-white p-3 rounded-2xl border border-white/10 shadow-sm inline-block mb-3.5 relative group">
                     <img 
                       src={qrCodeUrl} 
                       alt="UPI Payment QR Code" 
@@ -1395,7 +1384,7 @@ function CheckoutScreen({
                     </div>
                   </div>
 
-                  <div className="w-full bg-secondary rounded-xl p-3 mb-4 text-left border border-border">
+                  <div className="w-full bg-white/5 rounded-xl p-3 mb-4 text-left border border-white/5">
                     <p className="text-[9px] text-muted-foreground uppercase font-black tracking-wider mb-0.5">{t("payingTo", lang)}</p>
                     <p className="font-mono text-xs font-black text-foreground flex items-center justify-between">
                       <span>{upiId}</span>
@@ -1406,19 +1395,19 @@ function CheckoutScreen({
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
                         }} 
-                        className="text-[9px] text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded font-sans uppercase font-black transition-colors"
+                        className="text-[9px] text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-1 rounded font-sans uppercase font-black transition-colors"
                       >
                         {copied ? (lang === "mz" ? "Copy a ni ta!" : "Copied!") : "Copy"}
                       </button>
                     </p>
                     <p className="text-[9px] text-muted-foreground uppercase font-black tracking-wider mt-2.5 mb-0.5">{t("amountToPay", lang)}</p>
-                    <p className="text-xs font-black text-accent">{fmtPrice(totalAmount)}</p>
+                    <p className="text-xs font-black text-blue-400">{fmtPrice(totalAmount)}</p>
                   </div>
 
                   {/* Mobile Pay deep link button */}
                   <a 
                     href={upiUri}
-                    className="w-full bg-primary text-white text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 active:scale-95 transition-all hover:bg-opacity-90 mb-1 text-center"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all mb-1 text-center"
                   >
                     {t("openUpiApp", lang)}
                   </a>
@@ -1427,24 +1416,24 @@ function CheckoutScreen({
 
               <div className="space-y-2 mb-4">
                 {cart.map(({ product, qty }) => (
-                  <div key={product.id} className="flex gap-3 bg-card rounded-xl p-3 border border-border shadow-sm">
-                    <img src={product.image} alt={product.name} className="w-14 h-14 rounded-lg object-cover bg-muted" />
-                    <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{product.name}</p><p className="text-xs text-muted-foreground">{lang === "mz" ? "Zat:" : "Qty:"} {qty}</p><p className="font-black text-accent">{fmtPrice(product.price * qty)}</p></div>
+                  <div key={product.id} className="flex gap-3 glass-card rounded-xl p-3 shadow-sm">
+                    <img src={product.image} alt={product.name} className="w-14 h-14 rounded-lg object-cover bg-white/5 border border-white/5" />
+                    <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{product.name}</p><p className="text-xs text-muted-foreground">{lang === "mz" ? "Zat:" : "Qty:"} {qty}</p><p className="font-black text-blue-400">{fmtPrice(product.price * qty)}</p></div>
                   </div>
                 ))}
               </div>
-              <div className="bg-secondary rounded-2xl p-4 space-y-3 border border-border">
+              <div className="glass-card rounded-2xl p-4 space-y-3">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">{lang === "mz" ? "Pek dan tur" : "Payment"}</span><span className="font-bold">{payment === "gpay" ? "UPI Payment" : (lang === "mz" ? "Cash on Delivery" : "Cash on Delivery")}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Address</span><span className="font-bold text-right">{street}, {city}</span></div>
-                <div className="flex justify-between font-black pt-1 border-t border-border"><span>{t("total", lang)}</span><span className="text-accent">{fmtPrice(totalAmount)}</span></div>
+                <div className="flex justify-between font-black pt-1 border-t border-white/5"><span>{t("total", lang)}</span><span className="text-blue-400">{fmtPrice(totalAmount)}</span></div>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="bg-background/95 backdrop-blur-sm border-t border-border px-4 pb-6 pt-3 z-20 flex-shrink-0">
-        <button onClick={() => step < 2 ? setStep(s => s + 1) : onSuccess(payment, `${street}, ${city}, ${stateZip}`)} className="w-full bg-primary text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all">
+      <div className="bg-background/80 backdrop-blur-md border-t border-white/5 px-4 pb-6 pt-3 z-20 flex-shrink-0">
+        <button onClick={() => step < 2 ? setStep(s => s + 1) : onSuccess(payment, `${street}, ${city}, ${stateZip}`)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all">
           {step === 2 ? <><Check size={18} /> {t("placeOrder", lang)}</> : <>{t("continue", lang)} <ChevronRight size={18} /></>}
         </button>
       </div>
@@ -1457,21 +1446,21 @@ function CheckoutScreen({
 function OrderSuccess({ onContinue, lang }: { onContinue: () => void; lang: "en" | "mz" }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-8 text-center animate-fade-in">
-      <div className="w-28 h-28 rounded-full bg-green-100 flex items-center justify-center mb-6 shadow-2xl">
-        <CheckCircle size={54} className="text-green-500" strokeWidth={1.5} />
+      <div className="w-28 h-28 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-6 shadow-2xl shadow-green-500/5">
+        <CheckCircle size={54} className="text-green-400" strokeWidth={1.5} />
       </div>
       <h2 className="text-2xl font-black text-foreground mb-2">{t("orderPlaced", lang)}</h2>
       <p className="text-muted-foreground text-sm leading-relaxed mb-8">
         {lang === "mz" ? "I order nemnghet a ni ta e. Order-te tab ah i order i chhui zui thei ang." : "Your order has been confirmed. You can track your order in the Orders tab."}
       </p>
-      <div className="bg-secondary rounded-2xl p-4 w-full mb-6">
+      <div className="glass-card rounded-2xl p-4 w-full mb-6">
         <p className="text-xs text-muted-foreground mb-1 font-semibold">{lang === "mz" ? "Order Dinhmun" : "Order Status"}</p>
-        <p className="font-black text-lg text-green-600">{t("pendingConfirmation", lang)}</p>
+        <p className="font-black text-lg text-green-400">{t("pendingConfirmation", lang)}</p>
         <p className="text-xs text-muted-foreground mt-2">
           {lang === "mz" ? "Thlen hun tur chhut lawk: Hna thawh ni 3-5 chhungin" : "Estimated delivery: 3–5 business days"}
         </p>
       </div>
-      <button onClick={onContinue} className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-2xl shadow-primary/30 active:scale-[0.98] transition-all">
+      <button onClick={onContinue} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all">
         {t("continueShopping", lang)}
       </button>
     </div>
@@ -1504,7 +1493,7 @@ function OrdersScreen({
       </div>
       <div className="flex gap-2 px-4 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: "none" }}>
         {(["all", "pending", "processing", "shipped", "delivered", "cancelled"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all capitalize ${filter === f ? "bg-primary text-white shadow-md" : "bg-card text-foreground border border-border"}`}>
+          <button key={f} onClick={() => setFilter(f)} className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all capitalize ${filter === f ? "bg-blue-600 text-white shadow-md" : "glass-button hover:border-white/20"}`}>
             {f === "all" ? (lang === "mz" ? "Order zawng zawng" : "All Orders") : (lang === "mz" ? (f === "pending" ? "A la chhuak lo" : f === "processing" ? "Tih mek" : f === "shipped" ? "Thawn chhuah" : f === "delivered" ? "Thleng tawh" : "Sut lehna") : f)}
           </button>
         ))}
@@ -1512,13 +1501,13 @@ function OrdersScreen({
       
       {orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-secondary flex items-center justify-center mb-4 shadow-sm"><Package size={36} className="text-muted-foreground" /></div>
+          <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 shadow-sm"><Package size={36} className="text-muted-foreground" /></div>
           <h3 className="font-bold text-base text-foreground mb-1">{lang === "mz" ? "Order i la nei lo" : "No orders yet"}</h3>
           <p className="text-xs text-muted-foreground max-w-xs">{lang === "mz" ? "Alpha Mobile atangin secondhand phone tha tak tak i thlang thei ang." : "You haven't placed any orders yet. Check out our amazing collection of used phones!"}</p>
           {onTabChange && (
             <button 
               onClick={() => onTabChange("shop")}
-              className="mt-6 bg-primary text-white text-xs font-black px-5 py-2.5 rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
+              className="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-5 py-2.5 rounded-xl shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
             >
               {lang === "mz" ? "Dawr en rawh →" : "Shop now →"}
             </button>
@@ -1527,18 +1516,18 @@ function OrdersScreen({
       ) : (
         <div className="space-y-3 px-4">
           {filtered.map(o => (
-            <button key={o.id} onClick={() => onOrderSelect(o)} className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border hover:border-accent/30 hover:scale-[1.01] active:scale-[0.99] transition-all text-left">
+            <button key={o.id} onClick={() => onOrderSelect(o)} className="w-full glass-card rounded-2xl p-4 shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all text-left">
               <div className="flex items-start justify-between mb-3">
                 <div><p className="font-black text-sm">{o.id}</p><p className="text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p></div>
                 <Badge status={o.status} />
               </div>
               <div className="flex gap-2 mb-3">
-                {o.items.slice(0, 3).map(({ product }) => <img key={product.id} src={product.image} alt={product.name} className="w-14 h-14 rounded-xl object-cover bg-muted" />)}
-                {o.items.length > 3 && <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center"><span className="text-sm font-black text-muted-foreground">+{o.items.length - 3}</span></div>}
+                {o.items.slice(0, 3).map(({ product }) => <img key={product.id} src={product.image} alt={product.name} className="w-14 h-14 rounded-xl object-cover bg-white/5 border border-white/5" />)}
+                {o.items.length > 3 && <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center"><span className="text-sm font-black text-muted-foreground">+{o.items.length - 3}</span></div>}
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">{o.items.reduce((s, i) => s + i.qty, 0)} {lang === "mz" ? "thilte" : "items"} · {o.payment === "gpay" ? "UPI" : (lang === "mz" ? "COD" : "COD")}</p>
-                <div className="flex items-center gap-1"><span className="font-black text-accent">{fmtPrice(o.total)}</span><ChevronRight size={14} className="text-muted-foreground" /></div>
+                <div className="flex items-center gap-1"><span className="font-black text-blue-400">{fmtPrice(o.total)}</span><ChevronRight size={14} className="text-muted-foreground" /></div>
               </div>
             </button>
           ))}
@@ -1561,50 +1550,50 @@ function OrderDetail({ order, onBack, lang }: { order: Order; onBack: () => void
   ];
   return (
     <div className="flex-grow flex flex-col overflow-hidden h-full relative">
-      <div className="flex items-center gap-3 px-4 pt-4 pb-4 bg-background z-10 border-b border-border flex-shrink-0">
-        <button onClick={onBack} className="w-11 h-11 rounded-xl bg-card shadow-sm border border-border flex items-center justify-center hover:bg-muted active:scale-95 transition-all"><ArrowLeft size={18} /></button>
+      <div className="flex items-center gap-3 px-4 pt-4 pb-4 bg-background/80 backdrop-blur-md z-10 border-b border-white/5 flex-shrink-0">
+        <button onClick={onBack} className="w-11 h-11 rounded-xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all"><ArrowLeft size={18} /></button>
         <h2 className="font-black text-lg">{lang === "mz" ? "Order Kimchang" : "Order Details"}</h2>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: "none" }}>
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
+        <div className="glass-card rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-center mb-1"><p className="font-black">{order.id}</p><Badge status={order.status} /></div>
           <p className="text-xs text-muted-foreground">{new Date(order.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</p>
         </div>
 
         {order.status !== "cancelled" && (
-          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
+          <div className="glass-card rounded-2xl p-4 shadow-sm">
             <h4 className="font-black text-sm mb-4">{lang === "mz" ? "Order Chhuihna" : "Order Tracking"}</h4>
             {steps.map((s, i) => (
               <div key={s.label} className="flex gap-3 mb-4 last:mb-0">
                 <div className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${s.done ? "bg-green-500" : "bg-secondary"}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${s.done ? "bg-green-500" : "bg-white/5 border border-white/10"}`}>
                     {s.done ? <Check size={14} className="text-white" /> : <div className="w-2 h-2 rounded-full bg-muted-foreground" />}
                   </div>
-                  {i < steps.length - 1 && <div className={`w-0.5 h-8 mt-1 ${s.done ? "bg-green-500" : "bg-border"}`} />}
+                  {i < steps.length - 1 && <div className={`w-0.5 h-8 mt-1 ${s.done ? "bg-green-500" : "bg-white/5"}`} />}
                 </div>
                 <div className="pt-1.5"><p className={`text-sm font-bold ${s.done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</p>{s.done && <p className="text-xs text-muted-foreground">{new Date(order.date).toLocaleDateString()}</p>}</div>
               </div>
             ))}
-            {order.tracking && <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">{lang === "mz" ? "Chhui zuihna:" : "Tracking:"} <span className="font-mono font-bold text-foreground">{order.tracking}</span></p>}
+            {order.tracking && <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-white/5">{lang === "mz" ? "Chhui zuihna:" : "Tracking:"} <span className="font-mono font-bold text-foreground">{order.tracking}</span></p>}
           </div>
         )}
 
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
+        <div className="glass-card rounded-2xl p-4 shadow-sm">
           <h4 className="font-black text-sm mb-3">{lang === "mz" ? "Thilte" : "Items"}</h4>
           <div className="space-y-3">
             {order.items.map(({ product, qty }) => (
               <div key={product.id} className="flex gap-3">
-                <img src={product.image} alt={product.name} className="w-14 h-14 rounded-xl object-cover bg-muted" />
-                <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{product.name}</p><p className="text-xs text-muted-foreground">{lang === "mz" ? "Zat:" : "Qty:"} {qty}</p><p className="font-black text-accent">{fmtPrice(product.price * qty)}</p></div>
+                <img src={product.image} alt={product.name} className="w-14 h-14 rounded-xl object-cover bg-white/5 border border-white/5" />
+                <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{product.name}</p><p className="text-xs text-muted-foreground">{lang === "mz" ? "Zat:" : "Qty:"} {qty}</p><p className="font-black text-blue-400">{fmtPrice(product.price * qty)}</p></div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
-          <div className="flex gap-3"><MapPin size={16} className="text-accent flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{t("deliveryAddress", lang)}</p><p className="text-sm">{order.address}</p></div></div>
-          <div className="flex gap-3"><CreditCard size={16} className="text-accent flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{lang === "mz" ? "Pek dan tur" : "Payment"}</p><p className="text-sm">{order.payment === "gpay" ? "UPI" : (lang === "mz" ? "COD" : "COD")}</p></div></div>
-          <div className="flex justify-between font-black pt-3 border-t border-border"><span>{t("total", lang)}</span><span className="text-accent">{fmtPrice(order.total)}</span></div>
+        <div className="glass-card rounded-2xl p-4 shadow-sm space-y-3">
+          <div className="flex gap-3"><MapPin size={16} className="text-blue-400 flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{t("deliveryAddress", lang)}</p><p className="text-sm">{order.address}</p></div></div>
+          <div className="flex gap-3"><CreditCard size={16} className="text-blue-400 flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{lang === "mz" ? "Pek dan tur" : "Payment"}</p><p className="text-sm">{order.payment === "gpay" ? "UPI" : (lang === "mz" ? "COD" : "COD")}</p></div></div>
+          <div className="flex justify-between font-black pt-3 border-t border-white/5"><span>{t("total", lang)}</span><span className="text-blue-400">{fmtPrice(order.total)}</span></div>
         </div>
       </div>
     </div>
@@ -1742,18 +1731,18 @@ function SettingsScreen({
   return (
     <div className="flex-1 overflow-y-auto pb-4 md:pb-6" style={{ scrollbarWidth: "none" }}>
       {!currentUser ? (
-        <div className="mx-4 mt-4 mb-5 bg-card border border-border rounded-3xl p-5 flex flex-col items-center text-center shadow-md animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-3">
+        <div className="mx-4 mt-4 mb-5 glass-card rounded-3xl p-5 flex flex-col items-center text-center shadow-md">
+          <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3">
             <Users size={28} className="text-muted-foreground" />
           </div>
           <h3 className="font-black text-base text-foreground mb-1">{t("guestSession", lang)}</h3>
           <p className="text-xs text-muted-foreground mb-4">{t("guestDesc", lang)}</p>
-          <button onClick={onOpenLogin} className="bg-primary text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md active:scale-95 transition-all">
+          <button onClick={onOpenLogin} className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md active:scale-95 transition-all">
             {t("loginRegister", lang)}
           </button>
         </div>
       ) : (
-        <div className="mx-4 mt-4 mb-5 bg-primary rounded-3xl p-5 flex items-center gap-4 shadow-2xl animate-fade-in text-left">
+        <div className="mx-4 mt-4 mb-5 glass-card bg-gradient-to-tr from-blue-600/20 to-indigo-600/10 rounded-3xl p-5 flex items-center gap-4 shadow-2xl border border-blue-500/20 text-left">
           <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-black text-xl">{currentUser.avatar || "JD"}</span>
           </div>
@@ -1769,14 +1758,14 @@ function SettingsScreen({
       {sections.map(section => (
         <div key={section.title} className="px-4 mb-4">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 px-1">{section.title}</p>
-          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+          <div className="glass-card rounded-2xl overflow-hidden shadow-sm">
             {section.items.map((item, i) => (
               <div 
                 key={item.label} 
                 onClick={item.onClick}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/60 transition-colors cursor-pointer ${i < section.items.length - 1 ? "border-b border-border" : ""}`}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 transition-colors cursor-pointer ${i < section.items.length - 1 ? "border-b border-white/5" : ""}`}
               >
-                <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0"><item.icon size={15} className="text-foreground" /></div>
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><item.icon size={15} className="text-foreground" /></div>
                 <span className="flex-1 text-sm font-semibold text-left text-foreground">{item.label}</span>
                 {item.right}
               </div>
@@ -1787,7 +1776,7 @@ function SettingsScreen({
 
       {currentUser && (
         <div className="px-4 mb-3">
-          <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-black py-4 rounded-2xl border border-red-100 hover:bg-red-100 active:scale-[0.98] transition-all">
+          <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-400 font-black py-4 rounded-2xl border border-red-500/20 hover:bg-red-500/20 active:scale-[0.98] transition-all">
             <LogOut size={17} /> {t("logOut", lang)}
           </button>
         </div>
@@ -1796,8 +1785,8 @@ function SettingsScreen({
 
       {/* Language Dialog */}
       {isLangOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-card border border-border rounded-3xl w-full max-w-xs p-6 shadow-2xl space-y-4 animate-scale-in text-left">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card rounded-3xl w-full max-w-xs p-6 shadow-2xl space-y-4 animate-scale-in text-left backdrop-blur-3xl">
             <h3 className="font-black text-lg text-foreground">{lang === "mz" ? "Tawng thlang rawh" : "Select Language"}</h3>
             <div className="space-y-2">
               {[
@@ -1807,14 +1796,14 @@ function SettingsScreen({
                 <button 
                   key={item.code}
                   onClick={() => { setLang(item.code as "en" | "mz"); setIsLangOpen(false); }}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${lang === item.code ? "border-primary bg-primary/5 text-primary animate-pulse" : "border-border bg-secondary text-muted-foreground"}`}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${lang === item.code ? "border-blue-500 bg-blue-500/10 text-blue-400" : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"}`}
                 >
                   <span>{item.name}</span>
                   {lang === item.code && <Check size={14} />}
                 </button>
               ))}
             </div>
-            <button onClick={() => setIsLangOpen(false)} className="w-full bg-secondary hover:bg-secondary/80 text-foreground font-black py-2.5 rounded-xl border border-border transition-all text-xs">
+            <button onClick={() => setIsLangOpen(false)} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-foreground font-black py-2.5 rounded-xl transition-all text-xs">
               {lang === "mz" ? "Sut lehna" : "Cancel"}
             </button>
           </div>
@@ -1866,44 +1855,44 @@ function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: () => vo
   };
 
   return (
-    <div className="flex-1 flex flex-col" style={{ background: "linear-gradient(145deg, #060E1D 0%, #0B1D3A 50%, #1E3A6E 100%)" }}>
-      <button onClick={onBack} className="absolute top-6 left-4 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center z-10">
-        <ArrowLeft size={17} className="text-white" />
+    <div className="flex-grow flex flex-col overflow-hidden h-full relative justify-center">
+      <button onClick={onBack} className="absolute top-6 left-4 w-11 h-11 rounded-xl glass-button flex items-center justify-center z-10 active:scale-95 transition-all">
+        <ArrowLeft size={17} />
       </button>
-      <div className="flex-1 flex flex-col items-center justify-center px-8">
-        <div className="w-24 h-24 rounded-3xl bg-white overflow-hidden mb-5 shadow-2xl border-2 border-white/20">
-          <ImageWithFallback src={shopLogo} alt="Alpha Mobile logo" className="w-full h-full object-contain" />
+      <div className="flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden mb-4 shadow-2xl">
+          <ImageWithFallback src={shopLogo} alt="Alpha Mobile logo" className="w-14 h-14 object-contain" />
         </div>
-        <h2 className="text-white font-black text-2xl mb-1">Admin Access</h2>
-        <p className="text-blue-300 text-sm mb-10 font-medium">Alpha Mobile · Staff Portal</p>
+        <h2 className="text-foreground font-black text-2xl mb-1">Admin Access</h2>
+        <p className="text-muted-foreground text-xs mb-8 font-medium">Alpha Mobile · Staff Portal</p>
 
-        <div className="w-full space-y-4">
+        <div className="w-full max-w-xs glass-card rounded-3xl p-6 shadow-2xl space-y-4">
           <div>
-            <label className="text-blue-200 text-xs font-black mb-2 block uppercase tracking-wide">Email</label>
-            <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 backdrop-blur-sm">
-              <Mail size={16} className="text-blue-300 flex-shrink-0" />
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-blue-300/40" />
+            <label className="text-muted-foreground text-[10px] font-black mb-1.5 block uppercase tracking-wide">Email</label>
+            <div className="flex items-center gap-3 glass-input rounded-xl px-4 py-3">
+              <Mail size={15} className="text-muted-foreground flex-shrink-0" />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground/40" />
             </div>
           </div>
           <div>
-            <label className="text-blue-200 text-xs font-black mb-2 block uppercase tracking-wide">Password</label>
-            <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 backdrop-blur-sm">
-              <Lock size={16} className="text-blue-300 flex-shrink-0" />
-              <input type={showPw ? "text" : "password"} value={pw} onChange={e => setPw(e.target.value)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-blue-300/40" />
-              <button onClick={() => setShowPw(v => !v)}>{showPw ? <EyeOff size={15} className="text-blue-300" /> : <Eye size={15} className="text-blue-300" />}</button>
+            <label className="text-muted-foreground text-[10px] font-black mb-1.5 block uppercase tracking-wide">Password</label>
+            <div className="flex items-center gap-3 glass-input rounded-xl px-4 py-3">
+              <Lock size={15} className="text-muted-foreground flex-shrink-0" />
+              <input type={showPw ? "text" : "password"} value={pw} onChange={e => setPw(e.target.value)} className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground/40" />
+              <button onClick={() => setShowPw(v => !v)}>{showPw ? <EyeOff size={15} className="text-muted-foreground" /> : <Eye size={15} className="text-muted-foreground" />}</button>
             </div>
           </div>
           {error && (
-            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3">
-              <AlertCircle size={14} className="text-red-300 flex-shrink-0" />
-              <p className="text-red-200 text-xs">{error}</p>
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5">
+              <AlertCircle size={14} className="text-red-400 flex-shrink-0" />
+              <p className="text-red-400 text-xs">{error}</p>
             </div>
           )}
-          <button onClick={handleLogin} className="w-full bg-white text-primary font-black py-4 rounded-2xl hover:bg-blue-50 active:scale-[0.98] transition-all shadow-2xl mt-2">
+          <button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-500/10 mt-2">
             Login to Dashboard
           </button>
         </div>
-        <p className="text-blue-300/40 text-xs mt-8 text-center">Hint: admin@gmail.com · admin123</p>
+        <p className="text-muted-foreground/30 text-[10px] mt-6 text-center">Hint: admin@gmail.com · admin123</p>
       </div>
     </div>
   );
@@ -1957,29 +1946,29 @@ function AdminDashboard({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #060E1D 0%, #0B1D3A 100%)" }}>
+    <div className="flex-grow flex flex-col overflow-hidden h-full relative">
       {/* Admin nav */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white overflow-hidden flex-shrink-0 shadow-lg">
-            <ImageWithFallback src={shopLogo} alt="Alpha Mobile" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg">
+            <ImageWithFallback src={shopLogo} alt="Alpha Mobile" className="w-8 h-8 object-contain" />
           </div>
-          <div><p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Admin Panel</p><h2 className="text-white font-black text-lg leading-tight">Alpha Mobile</h2></div>
+          <div><p className="text-blue-400 text-[10px] font-black uppercase tracking-widest leading-none mb-0.5">Admin Panel</p><h2 className="text-foreground font-black text-lg leading-tight">Alpha Mobile</h2></div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={onNotifOpen} className="relative w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all">
-            <Bell size={16} className="text-white" />
+          <button onClick={onNotifOpen} className="relative w-9 h-9 rounded-xl glass-button flex items-center justify-center hover:bg-white/10 transition-all">
+            <Bell size={16} className="text-foreground" />
             {unreadNotifCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center animate-pulse">{unreadNotifCount}</span>
             )}
           </button>
-          <button onClick={onLogout} className="w-9 h-9 rounded-xl bg-red-500/20 border border-red-500/20 flex items-center justify-center"><LogOut size={15} className="text-red-300" /></button>
+          <button onClick={onLogout} className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 flex items-center justify-center text-red-400"><LogOut size={15} /></button>
         </div>
       </div>
 
       <div className="flex gap-2 px-5 overflow-x-auto pb-2 mb-1 flex-shrink-0" style={{ scrollbarWidth: "none" }}>
         {(["dashboard", "products", "orders", "customers", "analytics", "content", "payments"] as AdminTab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-shrink-0 text-xs font-black px-4 py-2 rounded-full transition-all capitalize ${tab === t ? "bg-white text-primary shadow-lg" : "bg-white/10 text-blue-300 border border-white/10"}`}>{tabLabels[t]}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-shrink-0 text-xs font-black px-4 py-2 rounded-full transition-all capitalize ${tab === t ? "bg-blue-600 text-white shadow-lg" : "glass-button border border-white/10 hover:bg-white/10"}`}>{tabLabels[t]}</button>
         ))}
       </div>
 
@@ -2037,12 +2026,12 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
   const recentOrders = orders.slice(0, 3);
 
   const stats = [
-    { label: "Revenue", value: fmtPrice(revenue), change: "+12.5%", icon: DollarSign, color: "from-blue-600 to-blue-900" },
-    { label: "Orders", value: orders.length.toString(), change: "+8.2%", icon: ShoppingBag, color: "from-indigo-600 to-indigo-900" },
-    { label: "Products", value: products.length.toString(), change: "Live DB", icon: Package, color: "from-violet-600 to-violet-900" },
-    { label: "Customers", value: customers.length.toString(), change: "+5.1%", icon: Users, color: "from-cyan-600 to-cyan-900" },
-    { label: "Conv. Rate", value: "3.24%", change: "+0.8%", icon: TrendingUp, color: "from-teal-600 to-teal-900" },
-    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "+$12", icon: BarChart2, color: "from-sky-600 to-sky-900" },
+    { label: "Revenue", value: fmtPrice(revenue), change: "+12.5%", icon: DollarSign },
+    { label: "Orders", value: orders.length.toString(), change: "+8.2%", icon: ShoppingBag },
+    { label: "Products", value: products.length.toString(), change: "Live DB", icon: Package },
+    { label: "Customers", value: customers.length.toString(), change: "+5.1%", icon: Users },
+    { label: "Conv. Rate", value: "3.24%", change: "+0.8%", icon: TrendingUp },
+    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "+$12", icon: BarChart2 },
   ];
 
   const weeklyOrdersData = [
@@ -2059,21 +2048,21 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 mt-2">
         {stats.map(s => (
-          <div key={s.label} className={`bg-gradient-to-br ${s.color} rounded-2xl p-4 shadow-xl`}>
+          <div key={s.label} className="glass-card hover:border-white/25 transition-all duration-300 rounded-2xl p-4 shadow-sm border border-white/5">
             <div className="flex justify-between items-start mb-3">
-              <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center"><s.icon size={16} className="text-white" /></div>
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center"><s.icon size={16} className="text-blue-400" /></div>
               <span className="text-[10px] font-black bg-green-400/20 text-green-300 px-2 py-0.5 rounded-full">{s.change}</span>
             </div>
-            <p className="text-white font-black text-xl leading-none mb-0.5">{s.value}</p>
-            <p className="text-white/50 text-[11px] font-semibold">{s.label}</p>
+            <p className="text-foreground font-black text-xl leading-none mb-0.5">{s.value}</p>
+            <p className="text-muted-foreground text-[11px] font-semibold">{s.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
+      <div className="glass-card rounded-2xl p-4 mb-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-white font-black text-sm">Monthly Revenue</p>
-          <span className="text-blue-300 text-[10px] bg-white/10 px-2.5 py-1 rounded-full font-bold">Last 6 months</span>
+          <p className="text-foreground font-black text-sm">Monthly Revenue</p>
+          <span className="text-blue-400 text-[10px] bg-blue-500/10 px-2.5 py-1 rounded-full font-bold">Last 6 months</span>
         </div>
         <ResponsiveContainer width="100%" height={150}>
           <AreaChart data={salesData}>
@@ -2086,19 +2075,19 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-            <Tooltip contentStyle={{ background: "#0B1D3A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", fontSize: 12 }} formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
+            <Tooltip contentStyle={{ background: "rgba(10, 20, 45, 0.95)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", borderRadius: 12, color: "#fff", fontSize: 12 }} formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
             <Area type="monotone" dataKey="sales" stroke="#3B82F6" strokeWidth={2.5} fill="url(#rg)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-          <p className="text-white font-black text-xs mb-3">Weekly Orders</p>
+        <div className="glass-card rounded-2xl p-3 shadow-sm">
+          <p className="text-foreground font-black text-xs mb-3">Weekly Orders</p>
           <ResponsiveContainer width="100%" height={90}>
             <BarChart data={weeklyOrdersData}>
               <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "#0B1D3A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11, color: "#fff" }} />
+              <Tooltip contentStyle={{ background: "rgba(10, 20, 45, 0.95)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", borderRadius: 8, fontSize: 11, color: "#fff" }} />
               <Bar dataKey="orders" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -2209,58 +2198,57 @@ function AdminProductsTab({
     setShowAdd(false);
     setEditingProduct(null);
   };
-
   return (
     <div className="mt-2 text-left">
       <div className="flex items-center justify-between mb-4">
-        <div><p className="text-white font-black text-base">Products</p><p className="text-white/40 text-xs">{products.length} total</p></div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 bg-white text-primary text-xs font-black px-4 py-2 rounded-full shadow-lg active:scale-95 transition-transform"><Plus size={13} /> Add</button>
+        <div><p className="text-foreground font-black text-base">Products</p><p className="text-muted-foreground text-xs">{products.length} total</p></div>
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition-transform"><Plus size={13} /> Add</button>
       </div>
-      <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 mb-4">
-        <Search size={14} className="text-blue-300 flex-shrink-0" />
-        <input type="text" placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/30" />
+      <div className="flex items-center gap-2 glass-input rounded-xl px-3 py-2.5 mb-4">
+        <Search size={14} className="text-muted-foreground flex-shrink-0" />
+        <input type="text" placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground/40" />
       </div>
       <div className="space-y-2">
         {filtered.map(p => (
-          <div key={p.id} className="flex gap-3 bg-white/5 border border-white/10 rounded-2xl p-3 items-center">
-            <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover bg-white/10 flex-shrink-0" />
+          <div key={p.id} className="flex gap-3 glass-card rounded-2xl p-3 items-center border border-white/5">
+            <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover bg-white/5 border border-white/10 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-bold truncate">{p.name}</p>
-              <p className="text-white/40 text-[10px]">{p.brand} · {p.category}</p>
+              <p className="text-foreground text-xs font-bold truncate">{p.name}</p>
+              <p className="text-muted-foreground text-[10px]">{p.brand} · {p.category}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-blue-300 font-black text-sm">{fmtPrice(p.price)}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${p.stock > 20 ? "bg-green-500/20 text-green-300" : p.stock > 5 ? "bg-amber-500/20 text-amber-300" : "bg-red-500/20 text-red-300"}`}>Stock: {p.stock}</span>
+                <span className="text-blue-400 font-black text-sm">{fmtPrice(p.price)}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold border ${p.stock > 20 ? "bg-green-500/10 border-green-500/20 text-green-400" : p.stock > 5 ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>Stock: {p.stock}</span>
               </div>
             </div>
             <div className="flex flex-col gap-1.5 flex-shrink-0">
-              <button onClick={() => setEditingProduct(p)} className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"><Pencil size={11} className="text-white/60" /></button>
-              <button onClick={() => onProductDelete(p.id)} className="w-7 h-7 rounded-lg bg-red-500/20 flex items-center justify-center hover:bg-red-500/30 transition-colors"><Trash2 size={11} className="text-red-300" /></button>
+              <button onClick={() => setEditingProduct(p)} className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"><Pencil size={11} className="text-muted-foreground" /></button>
+              <button onClick={() => onProductDelete(p.id)} className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors"><Trash2 size={11} className="text-red-400" /></button>
             </div>
           </div>
         ))}
       </div>
 
       {(showAdd || editingProduct) && (
-        <div className="fixed inset-0 bg-black/80 flex items-end z-50 overflow-y-auto pt-10">
-          <form onSubmit={handleSubmit} className="w-full max-w-[390px] mx-auto bg-[#0B1D3A] rounded-t-3xl p-6 border-t border-white/10 shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end justify-center z-50 overflow-y-auto pt-10">
+          <form onSubmit={handleSubmit} className="w-full max-w-[390px] mx-auto glass-card rounded-t-3xl p-6 border-t border-white/10 shadow-2xl space-y-4 backdrop-blur-3xl">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-black text-lg">{editingProduct ? "Edit Product" : "Add New Product"}</h3>
-              <button type="button" onClick={() => { setShowAdd(false); setEditingProduct(null); }} className="text-white/50 hover:text-white"><X size={20} /></button>
+              <h3 className="text-foreground font-black text-lg">{editingProduct ? "Edit Product" : "Add New Product"}</h3>
+              <button type="button" onClick={() => { setShowAdd(false); setEditingProduct(null); }} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
             </div>
             
             <div>
-              <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Product Name</label>
-              <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400 placeholder:text-white/20" />
+              <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Product Name</label>
+              <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Brand</label>
-                <input required type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400 placeholder:text-white/20" />
+                <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Brand</label>
+                <input required type="text" value={brand} onChange={e => setBrand(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
               </div>
               <div>
-                <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-[#0B1D3A] border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400">
+                <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Category</label>
+                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500">
                   {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -2268,23 +2256,23 @@ function AdminProductsTab({
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Price ($)</label>
-                <input required type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400" />
+                <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Price ($)</label>
+                <input required type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500" />
               </div>
               <div>
-                <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Original Price ($)</label>
-                <input type="number" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400" />
+                <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Original Price ($)</label>
+                <input type="number" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500" />
               </div>
             </div>
 
             <div>
-              <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Stock Qty</label>
-              <input required type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-400" />
+              <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Stock Qty</label>
+              <input required type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-blue-500" />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-white/50 text-[11px] font-black uppercase tracking-wide">Product Images (3:4 ratio)</label>
+                <label className="text-muted-foreground text-[11px] font-black uppercase tracking-wide">Product Images (3:4 ratio)</label>
                 <button 
                   type="button" 
                   onClick={() => setImageUrls(prev => [...prev, ""])}
@@ -2305,7 +2293,7 @@ function AdminProductsTab({
                         setImageUrls(next);
                       }} 
                       placeholder={`Image URL ${index + 1}`} 
-                      className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-blue-400 placeholder:text-white/20" 
+                      className="flex-1 glass-input rounded-xl px-3 py-2 text-foreground text-xs outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" 
                     />
                     {imageUrls.length > 1 && (
                       <button 
@@ -2322,11 +2310,11 @@ function AdminProductsTab({
             </div>
 
             <div>
-              <label className="text-white/50 text-[11px] font-black mb-1.5 block uppercase tracking-wide">Description</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm outline-none focus:border-blue-400 placeholder:text-white/20 h-16 resize-none" />
+              <label className="text-muted-foreground text-[11px] font-black mb-1.5 block uppercase tracking-wide">Description</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full glass-input rounded-xl px-4 py-2 text-foreground text-sm outline-none focus:border-blue-500 placeholder:text-muted-foreground/30 h-16 resize-none" />
             </div>
 
-            <button type="submit" className="w-full bg-white text-primary font-black py-3 rounded-xl mt-2 active:scale-[0.98] transition-transform">
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl mt-2 active:scale-[0.98] transition-transform shadow-md">
               {editingProduct ? "Save Changes" : "Add Product"}
             </button>
           </form>
@@ -2373,32 +2361,32 @@ function AdminOrdersTab({
   };
 
   const ordStatusStyle = (s: Order["status"]) => {
-    if (s === "delivered")        return { bg: "rgba(34,197,94,0.18)",  bd: "rgba(34,197,94,0.35)",  cl: "#86efac" };
-    if (s === "cancelled")        return { bg: "rgba(239,68,68,0.18)",  bd: "rgba(239,68,68,0.35)",  cl: "#fca5a5" };
-    if (s === "out-for-delivery") return { bg: "rgba(249,115,22,0.18)", bd: "rgba(249,115,22,0.35)", cl: "#fdba74" };
-    if (s === "confirmed")        return { bg: "rgba(59,130,246,0.18)", bd: "rgba(59,130,246,0.35)", cl: "#93c5fd" };
-    if (s === "shipped")          return { bg: "rgba(139,92,246,0.18)", bd: "rgba(139,92,246,0.35)", cl: "#c4b5fd" };
-    return                               { bg: "rgba(99,102,241,0.18)", bd: "rgba(99,102,241,0.35)", cl: "#a5b4fc" };
+    if (s === "delivered")        return { bg: "rgba(34,197,94,0.1)",  bd: "rgba(34,197,94,0.2)",  cl: "#86efac" };
+    if (s === "cancelled")        return { bg: "rgba(239,68,68,0.1)",  bd: "rgba(239,68,68,0.2)",  cl: "#fca5a5" };
+    if (s === "out-for-delivery") return { bg: "rgba(249,115,22,0.1)", bd: "rgba(249,115,22,0.2)", cl: "#fdba74" };
+    if (s === "confirmed")        return { bg: "rgba(59,130,246,0.1)", bd: "rgba(59,130,246,0.2)", cl: "#93c5fd" };
+    if (s === "shipped")          return { bg: "rgba(139,92,246,0.1)", bd: "rgba(139,92,246,0.2)", cl: "#c4b5fd" };
+    return                               { bg: "rgba(99,102,241,0.1)", bd: "rgba(99,102,241,0.2)", cl: "#a5b4fc" };
   };
 
   const payStatusStyle = (s: string) => {
-    if (s === "paid")     return { bg: "rgba(34,197,94,0.18)",  bd: "rgba(34,197,94,0.35)",  cl: "#86efac" };
-    if (s === "refunded") return { bg: "rgba(239,68,68,0.18)",  bd: "rgba(239,68,68,0.35)",  cl: "#fca5a5" };
-    return                       { bg: "rgba(245,158,11,0.18)", bd: "rgba(245,158,11,0.35)", cl: "#fcd34d" };
+    if (s === "paid")     return { bg: "rgba(34,197,94,0.1)",  bd: "rgba(34,197,94,0.2)",  cl: "#86efac" };
+    if (s === "refunded") return { bg: "rgba(239,68,68,0.1)",  bd: "rgba(239,68,68,0.2)",  cl: "#fca5a5" };
+    return                       { bg: "rgba(245,158,11,0.1)", bd: "rgba(245,158,11,0.2)", cl: "#fcd34d" };
   };
 
   return (
     <div className="mt-2 text-left">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-white font-black text-base flex items-center gap-2">
+          <p className="text-foreground font-black text-base flex items-center gap-2">
             <span>📋</span> Manage Orders
           </p>
-          <p className="text-white/40 text-xs mt-0.5">{visibleOrders.length} orders total</p>
+          <p className="text-muted-foreground text-xs mt-0.5">{visibleOrders.length} orders total</p>
         </div>
         <button
           onClick={() => setRefreshKey(k => k + 1)}
-          className="flex items-center gap-1.5 text-[11px] font-black px-3.5 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/30 transition-all active:scale-95"
+          className="flex items-center gap-1.5 text-[11px] font-black px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all active:scale-95"
         >
           ↻ Refresh
         </button>
@@ -2412,16 +2400,16 @@ function AdminOrdersTab({
           const pss = payStatusStyle(curPayStat);
 
           return (
-            <div key={o.id} className="rounded-2xl overflow-hidden border border-white/10" style={{ background: "linear-gradient(145deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.02) 100%)" }}>
+            <div key={o.id} className="glass-card rounded-2xl overflow-hidden border border-white/5 shadow-sm">
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/5">
                 <div>
-                  <p className="text-amber-400 font-black text-sm">Order #{o.id.split("-").slice(-1)[0] || o.id}</p>
-                  <p className="text-white/35 text-[10px] mt-0.5">{fmtDate(o.date)}</p>
+                  <p className="text-blue-400 font-black text-sm">Order #{o.id.split("-").slice(-1)[0] || o.id}</p>
+                  <p className="text-muted-foreground text-[10px] mt-0.5">{fmtDate(o.date)}</p>
                 </div>
                 <button
                   onClick={() => setDeletedIds(prev => new Set([...prev, o.id]))}
-                  className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                  className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors"
                   title="Remove from view"
                 >
                   <Trash2 size={12} className="text-red-400" />
@@ -2431,39 +2419,39 @@ function AdminOrdersTab({
               <div className="p-4 space-y-3">
                 {/* Customer + Address row */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                    <p className="text-[9px] text-white/35 font-black uppercase tracking-widest mb-1">Customer</p>
-                    <p className="text-white font-bold text-[11px]">{o.customer_id ? o.customer_id.slice(0, 12) : "Guest"}</p>
-                    <p className="text-white/40 text-[10px] mt-0.5">{o.payment === "UPI Payment" ? "UPI" : "COD"}</p>
+                  <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
+                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">Customer</p>
+                    <p className="text-foreground font-bold text-[11px]">{o.customer_id ? o.customer_id.slice(0, 12) : "Guest"}</p>
+                    <p className="text-muted-foreground text-[10px] mt-0.5">{o.payment === "UPI Payment" ? "UPI" : "COD"}</p>
                   </div>
-                  <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                    <p className="text-[9px] text-white/35 font-black uppercase tracking-widest mb-1">Address</p>
-                    <p className="text-white/70 text-[10px] leading-snug line-clamp-2">{o.address || "—"}</p>
+                  <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
+                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">Address</p>
+                    <p className="text-foreground/70 text-[10px] leading-snug line-clamp-2">{o.address || "—"}</p>
                   </div>
                 </div>
 
                 {/* Items list */}
-                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                  <p className="text-[9px] text-white/35 font-black uppercase tracking-widest mb-2">Items</p>
+                <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
+                  <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-2">Items</p>
                   <div className="space-y-1">
                     {o.items.map(({ product, qty }) => (
                       <div key={product.id} className="flex items-center justify-between">
-                        <span className="text-white/75 text-[11px]">{product.name} × {qty}</span>
-                        <span className="text-white font-bold text-[11px]">₹{(product.price * qty).toLocaleString()}</span>
+                        <span className="text-foreground/75 text-[11px]">{product.name} × {qty}</span>
+                        <span className="text-foreground font-bold text-[11px]">₹{(product.price * qty).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/10">
-                    <span className="text-white font-black text-xs">Total</span>
-                    <span className="text-amber-400 font-black">₹{o.total.toLocaleString()}</span>
+                    <span className="text-foreground font-black text-xs">Total</span>
+                    <span className="text-blue-400 font-black">₹{o.total.toLocaleString()}</span>
                   </div>
                 </div>
 
                 {/* Payment method badge */}
                 <span className={`inline-flex items-center text-[10px] font-black px-3 py-1 rounded-full border ${
                   o.payment === "Cash On Delivery"
-                    ? "bg-amber-500/15 text-amber-300 border-amber-500/20"
-                    : "bg-blue-500/15 text-blue-300 border-blue-500/20"
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                 }`}>
                   {o.payment === "Cash On Delivery" ? "💵 COD" : "💳 UPI"}
                 </span>
@@ -2471,7 +2459,7 @@ function AdminOrdersTab({
                 {/* Dropdowns */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <div>
-                    <p className="text-[9px] text-white/35 font-black uppercase tracking-widest mb-1.5">Payment Status</p>
+                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1.5">Payment Status</p>
                     <div className="relative">
                       <select
                         value={curPayStat}
@@ -2480,7 +2468,7 @@ function AdminOrdersTab({
                         style={{ background: pss.bg, borderColor: pss.bd, color: pss.cl }}
                       >
                         {paymentStatusOptions.map(opt => (
-                          <option key={opt.value} value={opt.value} style={{ background: "#0B1D3A", color: "#fff" }}>{opt.label}</option>
+                          <option key={opt.value} value={opt.value} style={{ background: "#111827", color: "#fff" }}>{opt.label}</option>
                         ))}
                       </select>
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
@@ -2489,7 +2477,7 @@ function AdminOrdersTab({
                     </div>
                   </div>
                   <div>
-                    <p className="text-[9px] text-white/35 font-black uppercase tracking-widest mb-1.5">Order Status</p>
+                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1.5">Order Status</p>
                     <div className="relative">
                       <select
                         value={curOrdStat}
@@ -2498,7 +2486,7 @@ function AdminOrdersTab({
                         style={{ background: oss.bg, borderColor: oss.bd, color: oss.cl }}
                       >
                         {orderStatusOptions.map(opt => (
-                          <option key={opt.value} value={opt.value} style={{ background: "#0B1D3A", color: "#fff" }}>{opt.label}</option>
+                          <option key={opt.value} value={opt.value} style={{ background: "#111827", color: "#fff" }}>{opt.label}</option>
                         ))}
                       </select>
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
@@ -2514,8 +2502,8 @@ function AdminOrdersTab({
 
         {visibleOrders.length === 0 && (
           <div className="text-center py-16">
-            <Package size={48} className="text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 font-bold">No orders yet</p>
+            <Package size={48} className="text-muted-foreground/25 mx-auto mb-3" />
+            <p className="text-muted-foreground font-bold">No orders yet</p>
           </div>
         )}
       </div>
@@ -2548,20 +2536,20 @@ function AdminCustomersTab({ customers }: { customers: Customer[] }) {
   return (
     <div className="mt-2 text-left">
       <div className="flex items-center justify-between mb-4">
-        <div><p className="text-white font-black text-base">Customers</p><p className="text-white/40 text-xs">{customers.length} registered</p></div>
-        <button onClick={handleExport} className="text-xs font-bold px-3 py-1.5 bg-white/10 text-blue-300 rounded-full border border-white/10 hover:bg-white/20 active:scale-95 transition-all">Export</button>
+        <div><p className="text-foreground font-black text-base">Customers</p><p className="text-muted-foreground text-xs">{customers.length} registered</p></div>
+        <button onClick={handleExport} className="text-xs font-bold px-3 py-1.5 glass-button rounded-full border border-white/10 hover:bg-white/10 active:scale-95 transition-all">Export</button>
       </div>
       <div className="space-y-3">
         {customers.map(c => (
-          <div key={c.id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
+          <div key={c.id} className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg"><span className="text-white font-black text-sm">{c.avatar}</span></div>
-              <div className="flex-1 min-w-0"><p className="text-white font-bold text-sm">{c.name}</p><p className="text-white/40 text-xs">{c.email}</p></div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg"><span className="text-white font-black text-sm">{c.avatar}</span></div>
+              <div className="flex-1 min-w-0"><p className="text-foreground font-bold text-sm">{c.name}</p><p className="text-muted-foreground text-xs">{c.email}</p></div>
             </div>
-            <div className="grid grid-cols-3 gap-2 bg-white/5 rounded-xl p-3">
-              <div className="text-center"><p className="text-white font-black text-base">{c.orders}</p><p className="text-white/40 text-[10px]">Orders</p></div>
-              <div className="text-center border-x border-white/10"><p className="text-blue-300 font-black text-base">${c.spent.toLocaleString()}</p><p className="text-white/40 text-[10px]">Spent</p></div>
-              <div className="text-center"><p className="text-white font-black text-sm">{c.joined}</p><p className="text-white/40 text-[10px]">Joined</p></div>
+            <div className="grid grid-cols-3 gap-2 glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
+              <div className="text-center"><p className="text-foreground font-black text-base">{c.orders}</p><p className="text-muted-foreground text-[10px]">Orders</p></div>
+              <div className="text-center border-x border-white/10"><p className="text-blue-400 font-black text-base">${c.spent.toLocaleString()}</p><p className="text-muted-foreground text-[10px]">Spent</p></div>
+              <div className="text-center"><p className="text-foreground font-black text-sm">{c.joined}</p><p className="text-muted-foreground text-[10px]">Joined</p></div>
             </div>
           </div>
         ))}
@@ -2636,9 +2624,9 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
   return (
     <div className="mt-2 text-left">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-white font-black text-base">Analytics</p>
+        <p className="text-foreground font-black text-base">Analytics</p>
         <div className="flex gap-2">
-          <button onClick={() => window.print()} className="text-[10px] font-black px-2.5 py-1.5 bg-white/10 text-blue-300 rounded-full border border-white/10 flex items-center gap-1 hover:bg-white/20 active:scale-95 transition-all"><Download size={10} /> PDF</button>
+          <button onClick={() => window.print()} className="text-[10px] font-black px-2.5 py-1.5 glass-button rounded-full border border-white/10 flex items-center gap-1 hover:bg-white/10 active:scale-95 transition-all"><Download size={10} /> PDF</button>
           <button 
             onClick={() => {
               const headers = ["Metric", "Value", "Growth/Change"];
@@ -2653,7 +2641,7 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
               link.click();
               document.body.removeChild(link);
             }}
-            className="text-[10px] font-black px-2.5 py-1.5 bg-white/10 text-blue-300 rounded-full border border-white/10 hover:bg-white/20 active:scale-95 transition-all"
+            className="text-[10px] font-black px-2.5 py-1.5 glass-button rounded-full border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
           >
             CSV
           </button>
@@ -2661,27 +2649,27 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
         {metrics.map(m => (
-          <div key={m.label} className="bg-white/5 border border-white/10 rounded-2xl p-3">
-            <p className="text-blue-300 font-black text-lg leading-none mb-0.5">{m.value}</p>
-            <p className="text-white/40 text-[10px] leading-tight mb-1.5">{m.label}</p>
-            <p className="text-green-300 text-[10px] font-black">{m.change}</p>
+          <div key={m.label} className="glass-card rounded-2xl p-3 border border-white/5 shadow-sm">
+            <p className="text-blue-400 font-black text-lg leading-none mb-0.5">{m.value}</p>
+            <p className="text-muted-foreground text-[10px] leading-tight mb-1.5">{m.label}</p>
+            <p className="text-green-400 text-[10px] font-black">{m.change}</p>
           </div>
         ))}
       </div>
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
-        <p className="text-white font-black text-sm mb-3">Revenue Trend</p>
+      <div className="glass-card rounded-2xl p-4 mb-4 shadow-sm border border-white/5">
+        <p className="text-foreground font-black text-sm mb-3">Revenue Trend</p>
         <ResponsiveContainer width="100%" height={130}>
           <LineChart data={weeklyRevenueData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-            <Tooltip contentStyle={{ background: "#0B1D3A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 11, color: "#fff" }} />
+            <Tooltip contentStyle={{ background: "rgba(10, 20, 45, 0.95)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", borderRadius: 8, fontSize: 11, color: "#fff" }} />
             <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 3, fill: "#3B82F6", strokeWidth: 0 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
-        <p className="text-white font-black text-sm mb-3">Sales by Category</p>
+      <div className="glass-card rounded-2xl p-4 mb-4 shadow-sm border border-white/5">
+        <p className="text-foreground font-black text-sm mb-3">Sales by Category</p>
         <div className="flex items-center gap-4">
           <ResponsiveContainer width="40%" height={110}>
             <PieChart><Pie data={categoryData} cx="50%" cy="50%" innerRadius={28} outerRadius={48} dataKey="value">{categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie></PieChart>
@@ -2690,24 +2678,24 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
             {categoryData.map((c, i) => (
               <div key={c.name} className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                <span className="text-white/60 text-[10px] flex-1">{c.name}</span>
-                <span className="text-white font-black text-[10px]">{c.value}%</span>
+                <span className="text-muted-foreground text-[10px] flex-1">{c.name}</span>
+                <span className="text-foreground font-black text-[10px]">{c.value}%</span>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-        <p className="text-white font-black text-sm mb-3">Top Products</p>
+      <div className="glass-card rounded-2xl p-4 shadow-sm border border-white/5">
+        <p className="text-foreground font-black text-sm mb-3">Top Products</p>
         {topProductsList.map((item: any, i: number) => (
           <div key={item.product.id} className="flex items-center gap-3 mb-3 last:mb-0">
-            <span className="text-white/30 text-xs font-black w-4">#{i+1}</span>
-            <img src={item.product.image} alt={item.product.name} className="w-8 h-8 rounded-lg object-cover bg-white/10 flex-shrink-0" />
+            <span className="text-muted-foreground text-xs font-black w-4">#{i+1}</span>
+            <img src={item.product.image} alt={item.product.name} className="w-8 h-8 rounded-lg object-cover bg-white/5 border border-white/10 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-bold truncate">{item.product.name}</p>
-              <div className="w-full bg-white/10 rounded-full h-1 mt-1"><div className="h-1 rounded-full bg-blue-400 transition-all" style={{ width: `${100 - i * 15}%` }} /></div>
+              <p className="text-foreground text-xs font-bold truncate">{item.product.name}</p>
+              <div className="w-full bg-white/5 border border-white/10 rounded-full h-1 mt-1"><div className="h-1 rounded-full bg-blue-500 transition-all" style={{ width: `${100 - i * 15}%` }} /></div>
             </div>
-            <span className="text-blue-300 text-xs font-black flex-shrink-0">{fmtPrice(item.revenue || item.product.price)}</span>
+            <span className="text-blue-400 text-xs font-black flex-shrink-0">{fmtPrice(item.revenue || item.product.price)}</span>
           </div>
         ))}
       </div>
@@ -2794,103 +2782,103 @@ function AdminContentTab({
   };
 
   return (
-    <div className="mt-2 text-white text-left space-y-3">
-      <p className="text-white font-black text-base mb-4">Content Management</p>
+    <div className="mt-2 text-foreground text-left space-y-3">
+      <p className="text-foreground font-black text-base mb-4">Content Management</p>
 
       {/* Store Settings */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
         <div className="flex justify-between items-center mb-2">
           <div>
             <p className="font-bold text-sm">Store Settings</p>
-            <p className="text-white/40 text-xs">Edit shop name, phone, location, UPI ID</p>
+            <p className="text-muted-foreground text-xs">Edit shop name, phone, location, UPI ID</p>
           </div>
-          <button onClick={() => setEditingKey(editingKey === "shop" ? null : "shop")} className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"><Pencil size={12} className="text-blue-300" /></button>
+          <button onClick={() => setEditingKey(editingKey === "shop" ? null : "shop")} className="w-8 h-8 rounded-xl glass-button flex items-center justify-center hover:bg-white/10 transition-colors"><Pencil size={12} className="text-blue-400" /></button>
         </div>
         {editingKey !== "shop" && (
-          <div className="text-xs text-white/50 space-y-0.5">
-            <p><span className="text-white/80 font-bold">{shopName}</span> · {shopSub}</p>
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            <p><span className="text-foreground font-bold">{shopName}</span> · {shopSub}</p>
             <p>📍 {shopLoc} · 📞 {shopPhone}</p>
-            <p>💳 UPI ID: <span className="text-white/80 font-bold">{shopUpiId}</span></p>
+            <p>💳 UPI ID: <span className="text-foreground font-bold">{shopUpiId}</span></p>
           </div>
         )}
         {editingKey === "shop" && (
           <div className="space-y-3 mt-3 pt-3 border-t border-white/5">
             {[{label:"Shop Name",val:shopName,set:setShopName},{label:"Sub Title",val:shopSub,set:setShopSub},{label:"Phone",val:shopPhone,set:setShopPhone},{label:"Location",val:shopLoc,set:setShopLoc},{label:"Instagram",val:shopInsta,set:setShopInsta},{label:"UPI ID (for Payment)",val:shopUpiId,set:setShopUpiId}].map(field => (
               <div key={field.label}>
-                <label className="text-[10px] text-white/50 block mb-1">{field.label}</label>
-                <input type="text" value={field.val} onChange={e => field.set(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400" />
+                <label className="text-[10px] text-muted-foreground block mb-1">{field.label}</label>
+                <input type="text" value={field.val} onChange={e => field.set(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500" />
               </div>
             ))}
             <div>
-              <label className="text-[10px] text-white/50 block mb-1">Description</label>
-              <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white h-16 resize-none outline-none focus:border-blue-400" />
+              <label className="text-[10px] text-muted-foreground block mb-1">Description</label>
+              <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground h-16 resize-none outline-none focus:border-blue-500" />
             </div>
-            <button onClick={handleSaveShopInfo} disabled={saving} className="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg font-bold disabled:opacity-60">{saving ? "Saving..." : "Save Store Info"}</button>
+            <button onClick={handleSaveShopInfo} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-bold disabled:opacity-60">{saving ? "Saving..." : "Save Store Info"}</button>
           </div>
         )}
       </div>
 
       {/* Banners */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <div>
             <p className="font-bold text-sm">Hero Banners</p>
-            <p className="text-white/40 text-xs">{localBanners.length} slides active</p>
+            <p className="text-muted-foreground text-xs">{localBanners.length} slides active</p>
           </div>
-          <button onClick={() => setEditingKey(editingKey === "banners" ? null : "banners")} className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20"><Plus size={13} className="text-blue-300" /></button>
+          <button onClick={() => setEditingKey(editingKey === "banners" ? null : "banners")} className="w-8 h-8 rounded-xl glass-button flex items-center justify-center hover:bg-white/10"><Plus size={13} className="text-blue-400" /></button>
         </div>
         <div className="space-y-2">
           {localBanners.map((b, i) => (
-            <div key={i} className="flex items-center gap-2 bg-white/5 rounded-xl p-2.5">
-              <img src={b.img?.startsWith('http') ? b.img : `https://images.unsplash.com/photo-${b.img}?w=80&h=45&fit=crop`} alt={b.title} className="w-12 h-8 rounded-lg object-cover flex-shrink-0 bg-white/10" />
+            <div key={i} className="flex items-center gap-2 glass-card bg-white/[0.01] rounded-xl p-2.5 border border-white/5">
+              <img src={b.img?.startsWith('http') ? b.img : `https://images.unsplash.com/photo-${b.img}?w=80&h=45&fit=crop`} alt={b.title} className="w-12 h-8 rounded-lg object-cover flex-shrink-0 bg-white/5 border border-white/10" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold truncate">{b.title}</p>
-                <p className="text-white/40 text-[10px] truncate">{b.sub}</p>
+                <p className="text-muted-foreground text-[10px] truncate">{b.sub}</p>
               </div>
-              <button onClick={() => handleRemoveBanner(i)} className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0 hover:bg-red-500/40"><X size={10} className="text-red-300" /></button>
+              <button onClick={() => handleRemoveBanner(i)} className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0 hover:bg-red-500/20"><X size={10} className="text-red-400" /></button>
             </div>
           ))}
         </div>
         {editingKey === "banners" && (
           <div className="space-y-2 mt-3 pt-3 border-t border-white/5">
-            <p className="text-[10px] text-white/60 font-black uppercase tracking-wide">Add New Banner</p>
-            <input placeholder="Banner title" value={newBannerTitle} onChange={e => setNewBannerTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
-            <input placeholder="Subtitle text" value={newBannerSub} onChange={e => setNewBannerSub(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
-            <input placeholder="Image URL (or Unsplash ID)" value={newBannerImg} onChange={e => setNewBannerImg(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
-            <button onClick={handleAddBanner} className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Add Banner</button>
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wide">Add New Banner</p>
+            <input placeholder="Banner title" value={newBannerTitle} onChange={e => setNewBannerTitle(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
+            <input placeholder="Subtitle text" value={newBannerSub} onChange={e => setNewBannerSub(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
+            <input placeholder="Image URL (or Unsplash ID)" value={newBannerImg} onChange={e => setNewBannerImg(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
+            <button onClick={handleAddBanner} className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Add Banner</button>
           </div>
         )}
       </div>
 
       {/* Coupons */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <div>
             <p className="font-bold text-sm">Discount Coupons</p>
-            <p className="text-white/40 text-xs">{localCoupons.length} active codes</p>
+            <p className="text-muted-foreground text-xs">{localCoupons.length} active codes</p>
           </div>
-          <button onClick={() => setEditingKey(editingKey === "coupons" ? null : "coupons")} className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20"><Plus size={13} className="text-blue-300" /></button>
+          <button onClick={() => setEditingKey(editingKey === "coupons" ? null : "coupons")} className="w-8 h-8 rounded-xl glass-button flex items-center justify-center hover:bg-white/10"><Plus size={13} className="text-blue-400" /></button>
         </div>
         <div className="space-y-2">
           {localCoupons.map((c, i) => (
-            <div key={i} className="flex items-center gap-2 bg-white/5 rounded-xl p-2.5">
-              <span className="font-mono bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs font-black flex-shrink-0">{c.code}</span>
+            <div key={i} className="flex items-center gap-2 glass-card bg-white/[0.01] rounded-xl p-2.5 border border-white/5">
+              <span className="font-mono bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-black flex-shrink-0">{c.code}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-white/70">{c.description || `${c.discountPercent}% Off`}</p>
+                <p className="text-xs text-muted-foreground">{c.description || `${c.discountPercent}% Off`}</p>
               </div>
-              <button onClick={() => handleRemoveCoupon(i)} className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0 hover:bg-red-500/40"><X size={10} className="text-red-300" /></button>
+              <button onClick={() => handleRemoveCoupon(i)} className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0 hover:bg-red-500/20"><X size={10} className="text-red-400" /></button>
             </div>
           ))}
         </div>
         {editingKey === "coupons" && (
           <div className="space-y-2 mt-3 pt-3 border-t border-white/5">
-            <p className="text-[10px] text-white/60 font-black uppercase tracking-wide">Add New Coupon</p>
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wide">Add New Coupon</p>
             <div className="grid grid-cols-2 gap-2">
-              <input placeholder="Code (e.g. SAVE15)" value={newCouponCode} onChange={e => setNewCouponCode(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
-              <input type="number" placeholder="Discount %" value={newCouponPct} onChange={e => setNewCouponPct(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
+              <input placeholder="Code (e.g. SAVE15)" value={newCouponCode} onChange={e => setNewCouponCode(e.target.value)} className="glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
+              <input type="number" placeholder="Discount %" value={newCouponPct} onChange={e => setNewCouponPct(e.target.value)} className="glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
             </div>
-            <input placeholder="Description (optional)" value={newCouponDesc} onChange={e => setNewCouponDesc(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-400 placeholder:text-white/20" />
-            <button onClick={handleAddCoupon} className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Add Coupon</button>
+            <input placeholder="Description (optional)" value={newCouponDesc} onChange={e => setNewCouponDesc(e.target.value)} className="w-full glass-input rounded-lg p-2 text-xs text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" />
+            <button onClick={handleAddCoupon} className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Add Coupon</button>
           </div>
         )}
       </div>
@@ -2938,27 +2926,27 @@ function AdminPaymentsTab({
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUri)}`;
 
   return (
-    <div className="mt-2 text-white text-left space-y-4">
-      <p className="text-white font-black text-base mb-1 flex items-center gap-2">
+    <div className="mt-2 text-foreground text-left space-y-4">
+      <p className="text-foreground font-black text-base mb-1 flex items-center gap-2">
         <span>💳</span> Payment Settings
       </p>
-      <p className="text-white/40 text-xs -mt-3 mb-3">Control payment methods shown to customers at checkout.</p>
+      <p className="text-muted-foreground text-xs -mt-3 mb-3">Control payment methods shown to customers at checkout.</p>
 
       {/* UPI Payment */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-4">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">💳</span>
             </div>
             <div>
               <p className="font-bold text-sm">UPI / Google Pay</p>
-              <p className="text-white/40 text-xs">GPay, PhonePe, Paytm QR</p>
+              <p className="text-muted-foreground text-xs">GPay, PhonePe, Paytm QR</p>
             </div>
           </div>
           <button
             onClick={() => setEnableUpi(v => !v)}
-            className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${enableUpi ? "bg-blue-500" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${enableUpi ? "bg-blue-600" : "bg-white/10"}`}
           >
             <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${enableUpi ? "translate-x-6" : "translate-x-0.5"}`} />
           </button>
@@ -2967,33 +2955,33 @@ function AdminPaymentsTab({
         {enableUpi && (
           <div className="space-y-3 pt-3 border-t border-white/5">
             <div>
-              <label className="text-[10px] text-white/50 font-black uppercase tracking-widest block mb-1.5">UPI ID (Customers pay to this)</label>
+              <label className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1.5">UPI ID (Customers pay to this)</label>
               <input
                 type="text"
                 value={upiId}
                 onChange={e => setUpiId(e.target.value)}
                 placeholder="e.g. 9612217093@paytm"
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 placeholder:text-white/20 font-mono"
+                className="w-full glass-input rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30 font-mono"
               />
-              <p className="text-white/30 text-[10px] mt-1.5">This UPI ID is shown to customers during checkout and used to generate the QR code.</p>
+              <p className="text-muted-foreground/30 text-[10px] mt-1.5">This UPI ID is shown to customers during checkout and used to generate the QR code.</p>
             </div>
 
             {/* Live QR Preview */}
-            <div className="flex items-center gap-4 bg-white/5 rounded-xl p-3 border border-white/5">
+            <div className="flex items-center gap-4 glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
               <div className="bg-white p-2 rounded-xl flex-shrink-0">
                 <img src={qrUrl} alt="UPI QR Preview" className="w-20 h-20 object-contain" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white/60 text-[10px] font-black uppercase tracking-wider mb-1">Live QR Preview</p>
-                <p className="text-white font-mono text-xs break-all">{upiId}</p>
-                <p className="text-white/30 text-[10px] mt-1">Updates when you save</p>
+                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-wider mb-1">Live QR Preview</p>
+                <p className="text-foreground font-mono text-xs break-all">{upiId}</p>
+                <p className="text-muted-foreground/30 text-[10px] mt-1">Updates when you save</p>
               </div>
             </div>
 
             {/* Supported apps */}
             <div className="flex gap-2">
               {["GPay", "PhonePe", "Paytm", "BHIM"].map(app => (
-                <span key={app} className="text-[10px] font-black px-2.5 py-1 rounded-full bg-white/10 text-white/60 border border-white/10">{app}</span>
+                <span key={app} className="text-[10px] font-black px-2.5 py-1 rounded-full bg-white/5 text-muted-foreground border border-white/10">{app}</span>
               ))}
             </div>
           </div>
@@ -3001,20 +2989,20 @@ function AdminPaymentsTab({
       </div>
 
       {/* Cash on Delivery */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">💵</span>
             </div>
             <div>
               <p className="font-bold text-sm">Cash On Delivery</p>
-              <p className="text-white/40 text-xs">Pay when order arrives</p>
+              <p className="text-muted-foreground text-xs">Pay when order arrives</p>
             </div>
           </div>
           <button
             onClick={() => setEnableCod(v => !v)}
-            className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${enableCod ? "bg-amber-500" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${enableCod ? "bg-blue-600" : "bg-white/10"}`}
           >
             <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${enableCod ? "translate-x-6" : "translate-x-0.5"}`} />
           </button>
@@ -3022,34 +3010,34 @@ function AdminPaymentsTab({
       </div>
 
       {/* Shipping Fee */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="glass-card border border-white/5 rounded-2xl p-4 space-y-3 shadow-sm">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-            <Truck size={18} className="text-indigo-300" />
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+            <Truck size={18} className="text-indigo-400" />
           </div>
           <div>
             <p className="font-bold text-sm">Shipping Fee</p>
-            <p className="text-white/40 text-xs">Charged when order total &lt; ₹100</p>
+            <p className="text-muted-foreground text-xs">Charged when order total &lt; ₹100</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-white/60 text-sm font-bold">₹</span>
+          <span className="text-muted-foreground text-sm font-bold">₹</span>
           <input
             type="number"
             value={shippingFee}
             onChange={e => setShippingFee(e.target.value)}
-            className="flex-1 bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-400"
+            className="flex-1 glass-input rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-blue-500"
             min="0"
             step="0.01"
           />
-          <span className="text-white/40 text-xs">per order</span>
+          <span className="text-muted-foreground text-xs font-semibold">per order</span>
         </div>
-        <p className="text-white/30 text-[10px]">Set to 0 for always-free shipping.</p>
+        <p className="text-muted-foreground/30 text-[10px]">Set to 0 for always-free shipping.</p>
       </div>
 
       {/* Status preview */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mb-3">What customers will see at checkout</p>
+      <div className="glass-card border border-white/5 rounded-2xl p-4 shadow-sm">
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-3">What customers will see at checkout</p>
         <div className="space-y-2">
           {enableUpi ? (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
@@ -3113,13 +3101,11 @@ function BottomNav({ active, onTab, cartCount, lang }: { active: Tab; onTab: (t:
   return (
     <div className="flex-shrink-0 px-4 pb-5 pt-2 pointer-events-none relative z-30">
       <div
-        className="pointer-events-auto flex items-center justify-between rounded-[28px] px-3 py-2.5 shadow-2xl"
+        className="pointer-events-auto flex items-center justify-between rounded-[28px] px-3 py-2.5 shadow-2xl backdrop-blur-2xl"
         style={{
-          background: "linear-gradient(135deg, rgba(11,29,58,0.96) 0%, rgba(14,36,74,0.97) 100%)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          background: "rgba(255, 255, 255, 0.03)",
           border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05)",
         }}
       >
         {tabs.map(({ id, label, Icon }) => {
@@ -3137,8 +3123,8 @@ function BottomNav({ active, onTab, cartCount, lang }: { active: Tab; onTab: (t:
                 <div
                   className="flex items-center gap-2 px-4 py-2.5 rounded-2xl animate-fade-in"
                   style={{
-                    background: "linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%)",
-                    boxShadow: "0 4px 20px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                    background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+                    boxShadow: "0 4px 20px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
                   }}
                 >
                   <Icon size={18} className="text-white flex-shrink-0" strokeWidth={2.5} />
@@ -3160,7 +3146,7 @@ function BottomNav({ active, onTab, cartCount, lang }: { active: Tab; onTab: (t:
       </div>
       <div
         className="absolute bottom-3 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(37,99,235,0.18) 0%, transparent 70%)", filter: "blur(8px)" }}
+        style={{ background: "radial-gradient(ellipse, rgba(59,130,246,0.18) 0%, transparent 70%)", filter: "blur(8px)" }}
       />
     </div>
   );
@@ -3183,14 +3169,14 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
 
   return (
     <div
-      className="hidden md:flex flex-col w-[220px] flex-shrink-0 h-full relative overflow-hidden"
+      className="hidden md:flex flex-col w-[220px] flex-shrink-0 h-full relative overflow-hidden backdrop-blur-2xl"
       style={{
-        background: "linear-gradient(180deg, #060E1D 0%, #0B1D3A 60%, #1E3A6E 100%)",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255, 255, 255, 0.015)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
       }}
     >
-      <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full border border-white/[0.03] pointer-events-none" />
-      <div className="absolute top-20 -right-10 w-32 h-32 rounded-full border border-white/[0.03] pointer-events-none" />
+      <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full border border-white/[0.02] pointer-events-none" />
+      <div className="absolute top-20 -right-10 w-32 h-32 rounded-full border border-white/[0.02] pointer-events-none" />
 
       <button
         onClick={onLogoTap}
@@ -3214,8 +3200,8 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
               onClick={() => onTab(id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-left group ${isActive ? "shadow-lg" : "hover:bg-white/5"}`}
               style={isActive ? {
-                background: "linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%)",
-                boxShadow: "0 4px 16px rgba(37,99,235,0.35)",
+                background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.35)",
               } : {}}
             >
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"}`}>
@@ -3238,7 +3224,7 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
         })}
       </nav>
 
-      <div className="mx-3 mb-3 rounded-2xl p-3 space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="mx-3 mb-3 rounded-2xl p-3 space-y-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
         <p className="text-white/30 text-[9px] font-black uppercase tracking-widest px-1">Quick Stats</p>
         {[
           { label: "Products", value: products.length },
@@ -3349,7 +3335,25 @@ export default function App() {
   const [showShopPhone, setShowShopPhone] = useState(false);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const cached = localStorage.getItem("darkMode");
+    return cached !== null ? JSON.parse(cached) : true;
+  });
+
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
+
   const [shopInitCategory, setShopInitCategory] = useState<string | undefined>(undefined);
 
   const [currentUser, setCurrentUser] = useState<any>(() => {
@@ -3737,7 +3741,7 @@ export default function App() {
         style={{ background: "var(--background)" }}
       >
         <style>{`
-          @media (min-width: 768px) { .page-bg { background: linear-gradient(135deg, #060E1D 0%, #0B1D3A 50%, #1E3A6E 100%) !important; } }
+          @media (min-width: 768px) { .page-bg { background: radial-gradient(circle at 50% 50%, #0d1a3a 0%, #060d1f 100%) !important; } }
           @keyframes slideDown {
             0% { transform: translate(-50%, -100%); opacity: 0; }
             100% { transform: translate(-50%, 0); opacity: 1; }
@@ -3765,6 +3769,35 @@ export default function App() {
           className="page-bg relative w-full md:max-w-[1280px] h-full md:h-[85vh] md:min-h-[680px] bg-background flex flex-col md:flex-row overflow-hidden md:rounded-[36px] md:shadow-[0_0_0_1.5px_rgba(255,255,255,0.08),0_40px_100px_rgba(0,0,0,0.7)] animate-fade-in"
           style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
         >
+          {/* Animated Background Orbs */}
+          {darkMode && (
+            <>
+              <div className="bg-orb w-[300px] h-[300px] bg-blue-600/10 top-[10%] left-[-5%]" />
+              <div className="bg-orb w-[400px] h-[400px] bg-purple-600/10 bottom-[5%] right-[-10%] animate-[drift_35s_infinite_alternate_ease-in-out_2s]" />
+              <div className="bg-orb w-[250px] h-[250px] bg-teal-600/10 top-[50%] left-[20%] animate-[drift_30s_infinite_alternate_ease-in-out_1s]" />
+            </>
+          )}
+
+          {/* Floating Rising Particles */}
+          {darkMode && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+              <div className="bg-particle w-1 h-1 left-[10%] [animation-delay:0s] [animation-duration:8s]" />
+              <div className="bg-particle w-1.5 h-1.5 left-[25%] [animation-delay:2s] [animation-duration:12s]" />
+              <div className="bg-particle w-1 h-1 left-[45%] [animation-delay:1.5s] [animation-duration:10s]" />
+              <div className="bg-particle w-2 h-2 left-[60%] [animation-delay:4s] [animation-duration:14s]" />
+              <div className="bg-particle w-1 h-1 left-[75%] [animation-delay:3s] [animation-duration:9s]" />
+              <div className="bg-particle w-1.5 h-1.5 left-[90%] [animation-delay:5.5s] [animation-duration:11s]" />
+            </div>
+          )}
+
+          {/* Cursor Glow */}
+          <div
+            className="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300"
+            style={{
+              background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(59, 130, 246, 0.07), transparent 80%)`,
+              opacity: darkMode ? 1 : 0,
+            }}
+          />
           {/* ── TABLET SIDEBAR ── */}
           {!isAdmin && (
             <TabletSidebar

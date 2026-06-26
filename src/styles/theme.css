@@ -42,25 +42,25 @@
 }
 
 .dark {
-  --background: #060E1D;
-  --foreground: #E8F0FE;
-  --card: #0B1D3A;
-  --card-foreground: #E8F0FE;
-  --popover: #0B1D3A;
-  --popover-foreground: #E8F0FE;
+  --background: #060d1f;
+  --foreground: #F1F5F9;
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: #F1F5F9;
+  --popover: rgba(255, 255, 255, 0.04);
+  --popover-foreground: #F1F5F9;
   --primary: #3B82F6;
   --primary-foreground: #FFFFFF;
-  --secondary: #132238;
-  --secondary-foreground: #A0C0E0;
-  --muted: #0F2347;
-  --muted-foreground: #6B8FAF;
-  --accent: #60A5FA;
-  --accent-foreground: #0B1D3A;
+  --secondary: rgba(255, 255, 255, 0.05);
+  --secondary-foreground: #94A3B8;
+  --muted: rgba(255, 255, 255, 0.02);
+  --muted-foreground: #64748B;
+  --accent: #3B82F6;
+  --accent-foreground: #FFFFFF;
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(96, 165, 250, 0.15);
-  --input: #132238;
-  --ring: #60A5FA;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.03);
+  --ring: #3B82F6;
   --font-weight-medium: 600;
   --font-weight-normal: 400;
   --chart-1: #3B82F6;
@@ -68,14 +68,14 @@
   --chart-3: #93C5FD;
   --chart-4: #BFDBFE;
   --chart-5: #1D4ED8;
-  --sidebar: #060E1D;
-  --sidebar-foreground: #E8F0FE;
+  --sidebar: #050b14;
+  --sidebar-foreground: #F1F5F9;
   --sidebar-primary: #3B82F6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #132238;
-  --sidebar-accent-foreground: #A0C0E0;
-  --sidebar-border: rgba(96, 165, 250, 0.15);
-  --sidebar-ring: #60A5FA;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
+  --sidebar-accent-foreground: #F1F5F9;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #3B82F6;
 }
 
 @theme inline {
@@ -208,4 +208,128 @@
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
 }
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.35), 0 0 15px rgba(59, 130, 246, 0.15);
+  transform: translateY(-4px);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #F1F5F9;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #F1F5F9;
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Background Drifting Orbs */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 25s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(80px, 40px) scale(1.15);
+  }
+  100% {
+    transform: translate(-40px, 100px) scale(0.9);
+  }
+}
+
+/* Floating Rising Particles */
+.bg-particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  animation: floatUp 10s infinite linear;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(110vh) scale(0.2);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.35;
+  }
+  90% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-10vh) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 
