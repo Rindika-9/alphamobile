@@ -622,9 +622,11 @@ function HomeScreen({
             { l: lang === "mz" ? "Speaker" : "Speakers", e: "🔊", cat: "Speakers" },
             { l: lang === "mz" ? "Hmanruate" : "Accessories", e: "⚡", cat: "iPhone Accessories" }
           ].map(c => (
-            <button key={c.l} onClick={() => onNavigateShop(c.cat)} className="flex-shrink-0 flex flex-col items-center gap-1.5 glass-card rounded-2xl p-3 w-16 cursor-pointer">
-              <span className="text-2xl">{c.e}</span>
-              <span className="text-[10px] font-bold text-foreground text-center leading-tight">{c.l}</span>
+            <button key={c.l} onClick={() => onNavigateShop(c.cat)} className="flex-shrink-0 flex flex-col items-center gap-2 glass-card rounded-2xl p-3 w-18 cursor-pointer">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xl">
+                {c.e}
+              </div>
+              <span className="text-[9px] font-bold text-foreground text-center leading-tight">{c.l}</span>
             </button>
           ))}
         </div>
@@ -937,17 +939,17 @@ function ShopScreen({
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   
                   <div className="flex items-center justify-between w-full">
-                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
                       {icon}
                     </div>
                     <ChevronRight size={16} className="text-muted-foreground group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-300" />
                   </div>
                   
                   <div className="mt-3">
-                    <p className="font-black text-sm text-foreground group-hover:text-blue-400 transition-colors duration-200 leading-tight">
+                    <p className="font-black text-[15px] text-foreground tracking-tight group-hover:text-blue-400 transition-colors duration-200 leading-tight">
                       {displayLabel}
                     </p>
-                    <p className="text-[10px] font-bold text-muted-foreground/80 mt-1 uppercase tracking-wider">
+                    <p className="text-[10px] font-medium text-muted-foreground/50 mt-1 uppercase tracking-wider">
                       {count} {lang === "mz" ? "thilte" : count === 1 ? "product" : "products"}
                     </p>
                   </div>
@@ -1765,12 +1767,6 @@ function SettingsScreen({
     {
       title: t("preferences", lang),
       items: [
-        { 
-          icon: darkMode ? Sun : Moon, 
-          label: t("darkMode", lang), 
-          onClick: () => onDarkMode(!darkMode),
-          right: <button onClick={(e) => { e.stopPropagation(); onDarkMode(!darkMode); }} type="button" className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${darkMode ? "bg-accent" : "bg-slate-300"}`}><div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${darkMode ? "translate-x-6" : "translate-x-0.5"}`} /></button> 
-        },
         { 
           icon: Bell, 
           label: t("notifications", lang), 
@@ -3404,16 +3400,7 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
       </div>
 
       <div className="px-3 pb-4 space-y-2">
-        <button
-          onClick={() => onDarkMode(!darkMode)}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
-        >
-          {darkMode ? <Sun size={15} className="text-amber-300" /> : <Moon size={15} className="text-white/40" />}
-          <span className="text-white/40 text-xs font-semibold flex-1 text-left">{darkMode ? "Light Mode" : "Dark Mode"}</span>
-          <div className={`w-8 h-4 rounded-full relative transition-colors ${darkMode ? "bg-accent" : "bg-white/10"}`}>
-            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${darkMode ? "translate-x-4" : "translate-x-0.5"}`} />
-          </div>
-        </button>
+
         <div className="flex items-center gap-2 px-4 py-2.5">
           <Phone size={13} className="text-green-400 flex-shrink-0" />
           {!showShopPhone ? (
@@ -3500,10 +3487,8 @@ export default function App() {
   const [showShopPhone, setShowShopPhone] = useState(false);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const cached = localStorage.getItem("darkMode");
-    return cached !== null ? JSON.parse(cached) : true;
-  });
+  const [darkMode] = useState(true);
+  const setDarkMode = () => {};
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -3598,12 +3583,8 @@ export default function App() {
 
   // Apply dark class to <html> so CSS variables in theme.css take effect
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
+    document.documentElement.classList.add("dark");
+  }, []);
 
   // Supabase states
   const [products, setProducts] = useState<Product[]>([]);

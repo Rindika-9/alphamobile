@@ -2,49 +2,49 @@
 
 :root {
   --font-size: 16px;
-  --background: #EEF3FF;
-  --foreground: #0B1D3A;
-  --card: #FFFFFF;
-  --card-foreground: #0B1D3A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0B1D3A;
-  --primary: #0B1D3A;
+  --background: #060d1f;
+  --foreground: #F1F5F9;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #F1F5F9;
+  --popover: rgba(255, 255, 255, 0.04);
+  --popover-foreground: #F1F5F9;
+  --primary: #3B82F6;
   --primary-foreground: #FFFFFF;
-  --secondary: #DBEAFE;
-  --secondary-foreground: #1E3A6E;
-  --muted: #F0F5FF;
-  --muted-foreground: #5A7A9E;
-  --accent: #2563EB;
+  --secondary: rgba(255, 255, 255, 0.05);
+  --secondary-foreground: #94A3B8;
+  --muted: rgba(255, 255, 255, 0.02);
+  --muted-foreground: #64748B;
+  --accent: #3B82F6;
   --accent-foreground: #FFFFFF;
-  --destructive: #DC2626;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(11, 29, 58, 0.08);
-  --input: transparent;
-  --input-background: #F0F5FF;
-  --switch-background: #93C5FD;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.03);
+  --input-background: rgba(255, 255, 255, 0.02);
+  --switch-background: rgba(255, 255, 255, 0.1);
   --font-weight-medium: 600;
   --font-weight-normal: 400;
-  --ring: #2563EB;
-  --chart-1: #2563EB;
-  --chart-2: #0B1D3A;
-  --chart-3: #60A5FA;
-  --chart-4: #93C5FD;
-  --chart-5: #BFDBFE;
+  --ring: #3B82F6;
+  --chart-1: #3B82F6;
+  --chart-2: #60A5FA;
+  --chart-3: #93C5FD;
+  --chart-4: #BFDBFE;
+  --chart-5: #1D4ED8;
   --radius: 1rem;
-  --sidebar: #0B1D3A;
-  --sidebar-foreground: #E8F0FE;
+  --sidebar: #050b14;
+  --sidebar-foreground: #F1F5F9;
   --sidebar-primary: #3B82F6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #132238;
-  --sidebar-accent-foreground: #A0C0E0;
-  --sidebar-border: rgba(96, 165, 250, 0.15);
-  --sidebar-ring: #60A5FA;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
+  --sidebar-accent-foreground: #F1F5F9;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #3B82F6;
 }
 
 .dark {
   --background: #060d1f;
   --foreground: #F1F5F9;
-  --card: rgba(255, 255, 255, 0.03);
+  --card: rgba(255, 255, 255, 0.05);
   --card-foreground: #F1F5F9;
   --popover: rgba(255, 255, 255, 0.04);
   --popover-foreground: #F1F5F9;
@@ -218,19 +218,19 @@
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.35), 0 0 15px rgba(59, 130, 246, 0.15);
-  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .glass-input {
