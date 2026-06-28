@@ -291,13 +291,15 @@ function Stars({ rating, size = 11 }: { rating: number; size?: number }) {
 
 function Badge({ status }: { status: Order["status"] }) {
   const m: Record<Order["status"], { label: string; cls: string }> = {
-    pending: { label: "Pending", cls: "bg-amber-100 text-amber-700" },
+    pending: { label: "Pending Confirmation", cls: "bg-amber-100 text-amber-700" },
+    confirmed: { label: "Confirmed", cls: "bg-sky-100 text-sky-700" },
     processing: { label: "Processing", cls: "bg-blue-100 text-blue-700" },
     shipped: { label: "Shipped", cls: "bg-indigo-100 text-indigo-700" },
+    "out-for-delivery": { label: "Out For Delivery", cls: "bg-orange-100 text-orange-700" },
     delivered: { label: "Delivered", cls: "bg-green-100 text-green-700" },
     cancelled: { label: "Cancelled", cls: "bg-red-100 text-red-700" },
   };
-  const { label, cls } = m[status];
+  const { label, cls } = m[status] || { label: status, cls: "bg-gray-100 text-gray-700" };
   return <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${cls}`}>{label}</span>;
 }
 
@@ -1259,7 +1261,14 @@ function CheckoutScreen({
   paymentSettings?: any;
   currentUser: any;
   onBack: () => void;
-  onSuccess: (payment: "gpay" | "cod", address: string) => void;
+  onSuccess: (
+    payment: "gpay" | "cod",
+    address: string,
+    fullName: string,
+    phone: string,
+    utr?: string,
+    screenshot?: string
+  ) => void;
   lang: "en" | "mz";
 }) {
   const enableUpi = paymentSettings?.enableUpi !== false;
@@ -1275,6 +1284,24 @@ function CheckoutScreen({
   const [street, setStreet] = useState(currentUser?.address || "");
   const [city, setCity] = useState("");
   const [stateZip, setStateZip] = useState(currentUser?.pincode || "");
+
+  const [utr, setUtr] = useState("");
+  const [screenshot, setScreenshot] = useState("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert(lang === "mz" ? "File hi 2MB aiin a lian tur a ni lo" : "File size must be less than 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshot(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
   const totalAmount = total + (total > 100 ? 0 : shippingFeeValue);
@@ -1321,13 +1348,15 @@ function CheckoutScreen({
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Address Kimchang" : "Street Address"}</label>
                 <input type="text" value={street} onChange={e => setStreet(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
               </div>
-              <div>
-                <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Khua / Veng" : "City"}</label>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "State / Pin Code" : "State / ZIP"}</label>
-                <input type="text" value={stateZip} onChange={e => setStateZip(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Khua / Veng" : "City"}</label>
+                  <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Pincode" : "Pincode"}</label>
+                  <input type="text" value={stateZip} onChange={e => setStateZip(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
+                </div>
               </div>
             </div>
           )}
@@ -1384,6 +1413,16 @@ function CheckoutScreen({
                     </div>
                   </div>
 
+                  {/* Heads-up Note */}
+                  <div className="w-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-left p-3 rounded-xl flex items-start gap-2 mb-3.5">
+                    <AlertCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] font-semibold leading-relaxed">
+                      {lang === "mz" 
+                        ? "⚠️ Hriattirna: UPI app-ah i pay laiin description/note-ah khan product hming hi chhu rawh." 
+                        : "⚠️ Heads up: Enter the product name on upi app description when paying."}
+                    </p>
+                  </div>
+
                   <div className="w-full bg-white/5 rounded-xl p-3 mb-4 text-left border border-white/5">
                     <p className="text-[9px] text-muted-foreground uppercase font-black tracking-wider mb-0.5">{t("payingTo", lang)}</p>
                     <p className="font-mono text-xs font-black text-foreground flex items-center justify-between">
@@ -1407,10 +1446,56 @@ function CheckoutScreen({
                   {/* Mobile Pay deep link button */}
                   <a 
                     href={upiUri}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all mb-1 text-center"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all mb-4 text-center"
                   >
                     {t("openUpiApp", lang)}
                   </a>
+
+                  {/* UTR ID and Screenshot Upload fields */}
+                  <div className="w-full text-left space-y-3.5 pt-3.5 border-t border-white/5">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest flex items-center gap-1.5">
+                      <span>📝</span> Upload Payment Proof
+                    </p>
+                    
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wider block mb-1.5">UTR / Transaction ID (12 digits)</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. 123456789012" 
+                        value={utr} 
+                        onChange={e => setUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                        className="w-full glass-input rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-blue-500 placeholder:text-muted-foreground/30 font-mono shadow-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wider block mb-1.5">Payment Screenshot</label>
+                      {screenshot ? (
+                        <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center">
+                          <img src={screenshot} alt="Payment Screenshot" className="max-w-full max-h-full object-contain" />
+                          <button 
+                            type="button" 
+                            onClick={() => setScreenshot("")} 
+                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
+                          >
+                            <X size={15} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="w-full h-28 rounded-xl border border-dashed border-white/20 bg-white/5 hover:bg-white/10 hover:border-blue-500 transition-all flex flex-col items-center justify-center cursor-pointer gap-1 p-4 text-center">
+                          <Download size={22} className="text-muted-foreground/70 mb-1" />
+                          <span className="text-[11px] font-bold text-foreground">{lang === "mz" ? "Screenshot thlang rawh" : "Click to upload screenshot"}</span>
+                          <span className="text-[9px] text-muted-foreground/40">{lang === "mz" ? "A size 2MB aiin a tlem tur a ni" : "File size must be under 2MB"}</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleFileChange} 
+                            className="hidden" 
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1433,7 +1518,32 @@ function CheckoutScreen({
       </div>
 
       <div className="bg-background/80 backdrop-blur-md border-t border-white/5 px-4 pb-6 pt-3 z-20 flex-shrink-0">
-        <button onClick={() => step < 2 ? setStep(s => s + 1) : onSuccess(payment, `${street}, ${city}, ${stateZip}`)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all">
+        <button 
+          onClick={() => {
+            if (step < 2) {
+              if (step === 0) {
+                if (!fullName.trim() || !phone.trim() || !street.trim() || !city.trim() || !stateZip.trim()) {
+                  alert(lang === "mz" ? "Khawngaihin hming, phone number, address, khua, leh pincode dah vek rawh." : "Please fill in all address details.");
+                  return;
+                }
+              }
+              setStep(s => s + 1);
+            } else {
+              if (payment === "gpay") {
+                if (!utr || utr.trim().length < 6) {
+                  alert(lang === "mz" ? "Khawngaihin UTR ID dik tak chhut rawh (a tlem berah digit 6)." : "Please enter a valid UTR transaction ID (at least 6 characters).");
+                  return;
+                }
+                if (!screenshot) {
+                  alert(lang === "mz" ? "Khawngaihin payment screenshot upload rawh." : "Please upload a payment screenshot.");
+                  return;
+                }
+              }
+              onSuccess(payment, `${street}, ${city}, ${stateZip}`, fullName, phone, utr, screenshot);
+            }
+          }} 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all"
+        >
           {step === 2 ? <><Check size={18} /> {t("placeOrder", lang)}</> : <>{t("continue", lang)} <ChevronRight size={18} /></>}
         </button>
       </div>
@@ -1492,9 +1602,9 @@ function OrdersScreen({
         </p>
       </div>
       <div className="flex gap-2 px-4 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: "none" }}>
-        {(["all", "pending", "processing", "shipped", "delivered", "cancelled"] as const).map(f => (
+        {(["all", "pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-all capitalize ${filter === f ? "bg-blue-600 text-white shadow-md" : "glass-button hover:border-white/20"}`}>
-            {f === "all" ? (lang === "mz" ? "Order zawng zawng" : "All Orders") : (lang === "mz" ? (f === "pending" ? "A la chhuak lo" : f === "processing" ? "Tih mek" : f === "shipped" ? "Thawn chhuah" : f === "delivered" ? "Thleng tawh" : "Sut lehna") : f)}
+            {f === "all" ? (lang === "mz" ? "Order zawng zawng" : "All Orders") : (lang === "mz" ? (f === "pending" ? "A la chhuak lo" : f === "confirmed" ? "Nemnghet tawh" : f === "processing" ? "Tih mek" : f === "shipped" ? "Thawn chhuah" : f === "delivered" ? "Thleng tawh" : "Sut lehna") : f)}
           </button>
         ))}
       </div>
@@ -2326,10 +2436,12 @@ function AdminProductsTab({
 
 function AdminOrdersTab({
   orders,
+  customers,
   onStatusUpdate,
   onPaymentStatusUpdate
 }: {
   orders: Order[];
+  customers: Customer[];
   onStatusUpdate: (id: string, status: Order["status"], tracking?: string) => Promise<void>;
   onPaymentStatusUpdate: (orderId: string, paymentStatus: Order["paymentStatus"]) => void;
 }) {
@@ -2418,17 +2530,54 @@ function AdminOrdersTab({
 
               <div className="p-4 space-y-3">
                 {/* Customer + Address row */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
-                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">Customer</p>
-                    <p className="text-foreground font-bold text-[11px]">{o.customer_id ? o.customer_id.slice(0, 12) : "Guest"}</p>
-                    <p className="text-muted-foreground text-[10px] mt-0.5">{o.payment === "UPI Payment" ? "UPI" : "COD"}</p>
-                  </div>
-                  <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
-                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">Address</p>
-                    <p className="text-foreground/70 text-[10px] leading-snug line-clamp-2">{o.address || "—"}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const dbCust = o.customer_id ? customers.find(c => c.id === o.customer_id) : null;
+                  const displayCustName = o.customerName || dbCust?.name || "Guest User";
+                  const displayCustPhone = o.customerPhone || "N/A";
+                  const displayCustEmail = dbCust?.email || "Guest Email";
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5 space-y-1">
+                          <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Customer</p>
+                          <p className="text-foreground font-black text-[11px] leading-tight">{displayCustName}</p>
+                          <p className="text-muted-foreground text-[10px]">{displayCustPhone}</p>
+                          {dbCust && <p className="text-muted-foreground/60 text-[9px] truncate">{displayCustEmail}</p>}
+                        </div>
+                        <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
+                          <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">Address</p>
+                          <p className="text-foreground/70 text-[10px] leading-snug line-clamp-3">{o.address || "—"}</p>
+                        </div>
+                      </div>
+
+                      {o.payment === "UPI Payment" && (o.utr || o.screenshot) && (
+                        <div className="glass-card bg-white/[0.02] border border-white/10 rounded-xl p-3 space-y-2">
+                          <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Payment Proof (UPI)</p>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-muted-foreground font-semibold">UTR ID (12-digit):</span>
+                            <span className="font-mono font-black text-foreground bg-white/5 px-2 py-0.5 rounded tracking-wider">{o.utr || "N/A"}</span>
+                          </div>
+                          {o.screenshot && (
+                            <div>
+                              <p className="text-[9px] text-muted-foreground mb-1 font-semibold">Screenshot:</p>
+                              <a 
+                                href={o.screenshot} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="block relative group overflow-hidden rounded-lg border border-white/10 aspect-[4/3] max-h-36 bg-black/40"
+                              >
+                                <img src={o.screenshot} alt="Payment Receipt" className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <span className="text-white text-[9px] font-black bg-black/60 px-2 py-1 rounded uppercase tracking-wider">Open Full Image</span>
+                                </div>
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {/* Items list */}
                 <div className="glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
@@ -3520,7 +3669,14 @@ export default function App() {
   };
 
   // CHECKOUT MUTATION
-  const handleCheckoutSuccess = async (paymentMethod: "gpay" | "cod", addressInfo: string) => {
+  const handleCheckoutSuccess = async (
+    paymentMethod: "gpay" | "cod",
+    addressInfo: string,
+    fullName: string,
+    phone: string,
+    utr?: string,
+    screenshot?: string
+  ) => {
     const newOrderId = `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
     const checkoutTotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
     const shippingCost = checkoutTotal > 100 ? 0 : 9.99;
@@ -3534,6 +3690,10 @@ export default function App() {
       address: addressInfo,
       payment: paymentMethod === "gpay" ? "UPI Payment" : "Cash On Delivery",
       customer_id: currentUser?.id || undefined,
+      utr,
+      screenshot,
+      customerName: fullName,
+      customerPhone: phone,
     };
 
     try {

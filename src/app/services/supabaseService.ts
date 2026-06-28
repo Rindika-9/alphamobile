@@ -34,6 +34,10 @@ export interface Order {
   payment: string;
   tracking?: string;
   customer_id?: string;
+  utr?: string;
+  screenshot?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export interface Customer {
@@ -85,6 +89,25 @@ function mapProductToDb(p: Product): any {
 }
 
 function mapDbOrder(row: any): Order {
+  let paymentMethod = row.payment;
+  let utrVal: string | undefined = undefined;
+  let screenshotVal: string | undefined = undefined;
+  let customerNameVal: string | undefined = undefined;
+  let customerPhoneVal: string | undefined = undefined;
+
+  if (row.payment && row.payment.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(row.payment);
+      paymentMethod = parsed.method || "UPI Payment";
+      utrVal = parsed.utr;
+      screenshotVal = parsed.screenshot;
+      customerNameVal = parsed.customerName;
+      customerPhoneVal = parsed.customerPhone;
+    } catch (e) {
+      // Ignore parsing errors
+    }
+  }
+
   return {
     id: row.id,
     date: row.date,
@@ -93,13 +116,28 @@ function mapDbOrder(row: any): Order {
     items: row.items || [],
     total: Number(row.total),
     address: row.address,
-    payment: row.payment,
+    payment: paymentMethod,
     tracking: row.tracking || undefined,
     customer_id: row.customer_id || undefined,
+    utr: utrVal,
+    screenshot: screenshotVal,
+    customerName: customerNameVal,
+    customerPhone: customerPhoneVal,
   };
 }
 
 function mapOrderToDb(o: Order): any {
+  let paymentVal = o.payment;
+  if (o.utr || o.screenshot || o.customerName || o.customerPhone) {
+    paymentVal = JSON.stringify({
+      method: o.payment,
+      utr: o.utr,
+      screenshot: o.screenshot,
+      customerName: o.customerName,
+      customerPhone: o.customerPhone,
+    });
+  }
+
   return {
     id: o.id,
     date: o.date,
@@ -108,7 +146,7 @@ function mapOrderToDb(o: Order): any {
     items: o.items,
     total: o.total,
     address: o.address,
-    payment: o.payment,
+    payment: paymentVal,
     tracking: o.tracking || null,
     customer_id: o.customer_id || null,
   };
