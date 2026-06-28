@@ -1004,10 +1004,11 @@ function ShopScreen({
 
 // ─── PRODUCT DETAIL ───────────────────────────────────────────────────────────
 
-function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lang }: {
+function ProductDetail({ product, onBack, onAddToCart, onBuyNow, wishlist, onWishlist, lang }: {
   product: Product;
   onBack: () => void;
   onAddToCart: (p: Product, qty: number) => void;
+  onBuyNow: (p: Product) => void;
   wishlist: Set<string>;
   onWishlist: (id: string) => void;
   lang: "en" | "mz";
@@ -1108,13 +1109,19 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
             )}
           </div>
 
-          {/* Desktop inline Add to Cart */}
-          <div className="hidden md:block mt-8">
+          {/* Desktop inline Actions */}
+          <div className="hidden md:grid grid-cols-2 gap-3 mt-8">
             <button 
               onClick={() => onAddToCart(product, 1)} 
+              className="w-full bg-white/5 hover:bg-white/10 text-foreground font-black py-4 rounded-2xl flex items-center justify-center gap-2 border border-white/10 active:scale-[0.98] transition-all"
+            >
+              <ShoppingCart size={18} /> {lang === "mz" ? "Cart-ah dah rawh" : "Add to Cart"}
+            </button>
+            <button 
+              onClick={() => onBuyNow(product)} 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all"
             >
-              <ShoppingCart size={18} /> {lang === "mz" ? "Cart-ah dah rawh —" : "Add to Cart —"} {fmtPrice(product.price)}
+              <Zap size={18} /> {lang === "mz" ? "Lei nghal rawh" : "Buy Now"}
             </button>
           </div>
         </div>
@@ -1122,9 +1129,18 @@ function ProductDetail({ product, onBack, onAddToCart, wishlist, onWishlist, lan
       </div>
 
       {/* Mobile fixed bottom bar */}
-      <div className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4 pb-6 pt-3 bg-background/80 backdrop-blur-md border-t border-white/5 z-20">
-        <button onClick={() => onAddToCart(product, 1)} className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all">
-          <ShoppingCart size={18} /> {lang === "mz" ? "Cart-ah dah rawh —" : "Add to Cart —"} {fmtPrice(product.price)}
+      <div className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4 pb-6 pt-3 bg-background/80 backdrop-blur-md border-t border-white/5 z-20 grid grid-cols-2 gap-3">
+        <button 
+          onClick={() => onAddToCart(product, 1)} 
+          className="w-full bg-white/5 text-foreground font-black py-4 rounded-2xl flex items-center justify-center gap-2 border border-white/10 active:scale-[0.98] transition-all"
+        >
+          <ShoppingCart size={17} /> {lang === "mz" ? "Cart-ah" : "Add to Cart"}
+        </button>
+        <button 
+          onClick={() => onBuyNow(product)} 
+          className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all"
+        >
+          <Zap size={17} /> {lang === "mz" ? "Lei nghal" : "Buy Now"}
         </button>
       </div>
     </div>
@@ -4076,6 +4092,17 @@ export default function App() {
                   product={selectedProduct}
                   onBack={() => setScreen(activeTab)}
                   onAddToCart={(p, qty) => { addToCart(p, qty); setScreen(activeTab); }}
+                  onBuyNow={(p) => {
+                    const exists = cart.some(item => item.product.id === p.id);
+                    if (!exists) {
+                      setCart(prev => [...prev, { product: p, qty: 1 }]);
+                    }
+                    if (currentUser) {
+                      setScreen("checkout");
+                    } else {
+                      setScreen("customer-auth");
+                    }
+                  }}
                   wishlist={wishlist}
                   onWishlist={id => setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
                   lang={language}
