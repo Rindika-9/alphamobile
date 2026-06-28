@@ -670,7 +670,7 @@ function HomeScreen({
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={`m1-${i}`} className="flex items-center gap-2 mx-8 flex-shrink-0">
               <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">POWERED BY</span>
-              <a href="https://instagram.com/exfirm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+              <a href="https://www.instagram.com/exfirm.2026?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
                 <div className="w-4 h-4 rounded-[5px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white flex-shrink-0">
                   <svg className="w-2.5 h-2.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -686,7 +686,7 @@ function HomeScreen({
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={`m2-${i}`} className="flex items-center gap-2 mx-8 flex-shrink-0">
               <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">POWERED BY</span>
-              <a href="https://instagram.com/exfirm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+              <a href="https://www.instagram.com/exfirm.2026?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
                 <div className="w-4 h-4 rounded-[5px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white flex-shrink-0">
                   <svg className="w-2.5 h-2.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
