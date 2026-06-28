@@ -7,7 +7,7 @@ import {
   Filter, Mic, Share2, Shield, HelpCircle,
   Globe, Moon, Sun, Truck, CheckCircle, Package,
   TrendingUp, Users, BarChart2,
-  DollarSign, Lock, Mail, Wrench,
+  IndianRupee, Lock, Mail, Wrench,
   Tag, Download, FileText, LayoutGrid, List,
   Zap, CreditCard, AlertCircle
 } from "lucide-react";
@@ -276,7 +276,7 @@ const CHART_COLORS = ["#2563EB", "#0B1D3A", "#60A5FA", "#93C5FD", "#BFDBFE"];
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 
-const fmtPrice = (p: number) => `$${p.toLocaleString()}`;
+const fmtPrice = (p: number) => `₹${p.toLocaleString()}`;
 const calcDiscount = (orig: number, curr: number) => Math.round(((orig - curr) / orig) * 100);
 
 function Stars({ rating, size = 11 }: { rating: number; size?: number }) {
@@ -725,12 +725,12 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 const getPriceRanges = (lang: "en" | "mz") => [
   { id: "All", label: lang === "mz" ? "A vaiin" : "All Prices", min: 0, max: Infinity },
-  { id: "below_7000", label: lang === "mz" ? "$7,000 hnuai lam" : "Below $7,000", min: 0, max: 6999 },
-  { id: "7000_10000", label: "$7,000 - $10,000", min: 7000, max: 10000 },
-  { id: "10000_15000", label: "$10,000 - $15,000", min: 10000, max: 15000 },
-  { id: "15000_20000", label: "$15,000 - $20,000", min: 15000, max: 20000 },
-  { id: "20000_25000", label: "$20,000 - $25,000", min: 20000, max: 25000 },
-  { id: "above_25000", label: lang === "mz" ? "$25,000 chung lam" : "Above $25,000", min: 25001, max: Infinity },
+  { id: "below_7000", label: lang === "mz" ? "₹7,000 hnuai lam" : "Below ₹7,000", min: 0, max: 6999 },
+  { id: "7000_10000", label: "₹7,000 - ₹10,000", min: 7000, max: 10000 },
+  { id: "10000_15000", label: "₹10,000 - ₹15,000", min: 10000, max: 15000 },
+  { id: "15000_20000", label: "₹15,000 - ₹20,000", min: 15000, max: 20000 },
+  { id: "20000_25000", label: "₹20,000 - ₹25,000", min: 20000, max: 25000 },
+  { id: "above_25000", label: lang === "mz" ? "₹25,000 chung lam" : "Above ₹25,000", min: 25001, max: Infinity },
 ];
 
 function ShopScreen({
@@ -2148,12 +2148,12 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
   const recentOrders = orders.slice(0, 3);
 
   const stats = [
-    { label: "Revenue", value: fmtPrice(revenue), change: "+12.5%", icon: DollarSign },
+    { label: "Revenue", value: fmtPrice(revenue), change: "+12.5%", icon: IndianRupee },
     { label: "Orders", value: orders.length.toString(), change: "+8.2%", icon: ShoppingBag },
     { label: "Products", value: products.length.toString(), change: "Live DB", icon: Package },
     { label: "Customers", value: customers.length.toString(), change: "+5.1%", icon: Users },
     { label: "Conv. Rate", value: "3.24%", change: "+0.8%", icon: TrendingUp },
-    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "+$12", icon: BarChart2 },
+    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "+₹1,000", icon: BarChart2 },
   ];
 
   const weeklyOrdersData = [
