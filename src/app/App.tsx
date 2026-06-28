@@ -562,7 +562,6 @@ function HomeScreen({
         </button>
         {/* Shop name */}
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] text-muted-foreground font-semibold">{t("welcomeBack", lang)} 👋</p>
           <p className="text-base font-black text-foreground leading-tight">{activeShopInfo.name}</p>
         </div>
         {/* Actions (Language Switcher, Bell & Cart) */}
