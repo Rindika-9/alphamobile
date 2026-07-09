@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation, Routes, Route, Navigate, useParams } from "react-router";
 import {
   Home, ShoppingBag, Clock, Settings, Search,
   Heart, ShoppingCart, Star, ChevronRight, ChevronLeft, MapPin,
@@ -94,7 +95,7 @@ const TRANSLATIONS = {
     payingTo: "Payee UPI ID",
     amountToPay: "Amount to Pay",
     openUpiApp: "⚡ Open GPay / UPI App",
-    scanQrCode: "Scan QR code to pay or use button below"
+    scanQrCode: "Scan QR code to pay or copy the UPI ID"
   },
   mz: {
     welcomeBack: "Chibai le",
@@ -145,7 +146,7 @@ const TRANSLATIONS = {
     payingTo: "Payee UPI ID",
     amountToPay: "Pek tur zat",
     openUpiApp: "⚡ Open GPay / UPI App",
-    scanQrCode: "QR code scan-in emaw a hnuai button click-in pay rawh"
+    scanQrCode: "QR code scan-in emaw a chunga UPI ID hi copy-in pay rawh"
   }
 };
 
@@ -153,124 +154,10 @@ const t = (key: keyof typeof TRANSLATIONS.en, lang: "en" | "mz"): string => {
   return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
 };
 
-// ─── INITIAL SEED MOCK DATA ──────────────────────────────────────────────────
+// ─── (Mock seed data removed — data comes from admin panel) ─────────────────
 
-const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: "p1", name: "iPhone 15 Pro Max", brand: "Apple", category: "iPhones",
-    price: 1199, originalPrice: 1299, rating: 4.9, reviews: 2847,
-    image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop&auto=format",
-    stock: 24, badge: "Hot",
-    description: "The most powerful iPhone ever with titanium design, A17 Pro chip, and the most advanced camera system Apple has ever made.",
-    specs: { "Display": "6.7\" Super Retina XDR", "Chip": "A17 Pro", "Camera": "48MP + 12MP + 12MP", "Battery": "4422 mAh", "Storage": "256GB", "OS": "iOS 17" },
-  },
-  {
-    id: "p2", name: "iPhone 14", brand: "Apple", category: "iPhones",
-    price: 699, originalPrice: 799, rating: 4.7, reviews: 1923,
-    image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=400&fit=crop&auto=format",
-    stock: 18, badge: "Sale",
-    description: "iPhone 14 with Crash Detection, Emergency SOS via satellite, and an advanced dual-camera system.",
-    specs: { "Display": "6.1\" Super Retina XDR", "Chip": "A15 Bionic", "Camera": "12MP + 12MP", "Battery": "3279 mAh", "Storage": "128GB", "OS": "iOS 17" },
-  },
-  {
-    id: "p3", name: "Samsung Galaxy S24 Ultra", brand: "Samsung", category: "Android Phones",
-    price: 1299, originalPrice: 1399, rating: 4.8, reviews: 1456,
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&auto=format",
-    stock: 12, badge: "New",
-    description: "Galaxy AI is here. Galaxy S24 Ultra redefines what's possible with the most advanced Galaxy AI experience.",
-    specs: { "Display": "6.8\" QHD+ Dynamic AMOLED", "Chip": "Snapdragon 8 Gen 3", "Camera": "200MP + 12MP + 50MP + 10MP", "Battery": "5000 mAh", "Storage": "256GB", "OS": "Android 14 / One UI 6.1" },
-  },
-  {
-    id: "p4", name: "Google Pixel 8 Pro", brand: "Google", category: "Android Phones",
-    price: 899, originalPrice: 999, rating: 4.6, reviews: 892,
-    image: "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=400&h=400&fit=crop&auto=format",
-    stock: 15, badge: "Sale",
-    description: "Google Pixel 8 Pro with Tensor G3 chip delivers the most sophisticated Pixel camera yet with Magic Eraser and Best Take.",
-    specs: { "Display": "6.7\" LTPO OLED", "Chip": "Google Tensor G3", "Camera": "50MP + 48MP + 48MP", "Battery": "5050 mAh", "Storage": "128GB", "OS": "Android 14" },
-  },
-  {
-    id: "p5", name: "AirPods Pro (2nd Gen)", brand: "Apple", category: "AirPods",
-    price: 249, originalPrice: 279, rating: 4.9, reviews: 4521,
-    image: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&h=400&fit=crop&auto=format",
-    stock: 50, badge: "Hot",
-    description: "AirPods Pro deliver up to 2x more Active Noise Cancellation and revolutionary Adaptive Audio that continuously adapts to sound.",
-    specs: { "ANC": "2x Active Noise Cancellation", "Battery": "Up to 30hrs total", "Chip": "H2", "Water Resistance": "IPX4", "Connectivity": "Bluetooth 5.3" },
-  },
-  {
-    id: "p6", name: "Sony WH-1000XM5", brand: "Sony", category: "Headphones",
-    price: 349, originalPrice: 399, rating: 4.8, reviews: 3102,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop&auto=format",
-    stock: 30, badge: "Sale",
-    description: "Industry-leading noise canceling headphones with Dual Noise Sensor technology and 30-hour battery life.",
-    specs: { "ANC": "Industry-leading", "Battery": "30 hours", "Drivers": "30mm", "Connectivity": "Bluetooth 5.2", "Foldable": "Yes" },
-  },
-  {
-    id: "p7", name: "Anker PowerCore 20000", brand: "Anker", category: "Power Banks",
-    price: 49, originalPrice: 65, rating: 4.7, reviews: 8934,
-    image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400&h=400&fit=crop&auto=format",
-    stock: 100, badge: "Sale",
-    description: "Anker PowerCore 20000 with high-speed Power IQ charging and an ultra-compact form factor to charge all your devices.",
-    specs: { "Capacity": "20000 mAh", "Input": "USB-C 18W", "Output": "2x USB-A + 1x USB-C", "Weight": "356g" },
-  },
-  {
-    id: "p8", name: "Samsung 65W Super Fast Charger", brand: "Samsung", category: "Chargers",
-    price: 35, originalPrice: 45, rating: 4.6, reviews: 2341,
-    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=400&fit=crop&auto=format",
-    stock: 75, badge: "New",
-    description: "65W USB-C Super Fast Charging adapter for Samsung Galaxy devices — charge from 0 to 50% in about 20 minutes.",
-    specs: { "Power": "65W", "Protocol": "Super Fast Charging 2.0", "Connector": "USB-C", "Input": "100-240V" },
-  },
-  {
-    id: "p9", name: "JBL Charge 5 Speaker", brand: "JBL", category: "Speakers",
-    price: 179, originalPrice: 199, rating: 4.7, reviews: 1678,
-    image: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=400&h=400&fit=crop&auto=format",
-    stock: 40, badge: "Hot",
-    description: "JBL Charge 5 delivers powerful JBL Pro Sound, 20 hours of playtime, and serves as a portable charger for your devices.",
-    specs: { "Battery": "20 hours", "Water Resistance": "IP67", "Power Output": "40W", "Connectivity": "Bluetooth 5.1" },
-  },
-  {
-    id: "p10", name: "iPhone 15 Pro Clear Case", brand: "Apple", category: "iPhone Accessories",
-    price: 49, originalPrice: 49, rating: 4.5, reviews: 3241,
-    image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop&auto=format",
-    stock: 200, badge: "New",
-    description: "Apple Clear Case for iPhone 15 Pro with MagSafe — showcases the natural beauty of titanium while protecting your phone.",
-    specs: { "Material": "Polycarbonate", "MagSafe": "Yes", "Compatibility": "iPhone 15 Pro" },
-  },
-  {
-    id: "p11", name: "Samsung Galaxy Buds2 Pro", brand: "Samsung", category: "Earphones",
-    price: 229, originalPrice: 249, rating: 4.6, reviews: 1890,
-    image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop&auto=format",
-    stock: 35, badge: "Sale",
-    description: "Galaxy Buds2 Pro deliver 360 Audio and premium sound powered by a 2-way speaker system in a compact ergonomic design.",
-    specs: { "ANC": "Yes", "Battery": "8hr + 21hr (case)", "Driver": "11mm woofer + 6.5mm tweeter", "Water Resistance": "IPX7" },
-  },
-  {
-    id: "p12", name: "OnePlus 12", brand: "OnePlus", category: "Android Phones",
-    price: 799, originalPrice: 899, rating: 4.7, reviews: 724,
-    image: "https://images.unsplash.com/photo-1564466809058-bf4114d55352?w=400&h=400&fit=crop&auto=format",
-    stock: 20, badge: "New",
-    description: "OnePlus 12 with Snapdragon 8 Gen 3, Hasselblad Camera System, and 100W SuperVOOC fast charging.",
-    specs: { "Display": "6.82\" LTPO AMOLED", "Chip": "Snapdragon 8 Gen 3", "Camera": "50MP + 64MP + 48MP", "Battery": "5400 mAh", "Charging": "100W SuperVOOC" },
-  },
-];
 
-const INITIAL_ORDERS: Order[] = [
-  { id: "ORD-2024-001", date: "2024-01-15T10:30:00Z", status: "delivered", items: [{ product: INITIAL_PRODUCTS[0], qty: 1 }], total: 1199, address: "123 Main Street, New York, NY 10001", payment: "UPI Payment", tracking: "1Z999AA10123456784" },
-  { id: "ORD-2024-002", date: "2024-01-20T14:45:00Z", status: "shipped", items: [{ product: INITIAL_PRODUCTS[4], qty: 1 }, { product: INITIAL_PRODUCTS[6], qty: 2 }], total: 347, address: "456 Broadway, New York, NY 10013", payment: "Cash On Delivery", tracking: "1Z999AA10987654321" },
-  { id: "ORD-2024-003", date: "2024-01-25T11:15:00Z", status: "processing", items: [{ product: INITIAL_PRODUCTS[5], qty: 1 }], total: 349, address: "789 5th Ave, New York, NY 10022", payment: "UPI Payment" },
-  { id: "ORD-2024-004", date: "2024-01-28T09:20:00Z", status: "pending", items: [{ product: INITIAL_PRODUCTS[2], qty: 1 }], total: 1299, address: "321 Park Ave, New York, NY 10016", payment: "Cash On Delivery" },
-  { id: "ORD-2024-005", date: "2024-01-10T16:00:00Z", status: "cancelled", items: [{ product: INITIAL_PRODUCTS[8], qty: 1 }], total: 179, address: "555 Lexington Ave, New York, NY 10022", payment: "UPI Payment" },
-];
-
-const INITIAL_CUSTOMERS: Customer[] = [
-  { id: "c1", name: "Sarah Johnson", email: "sarah@gmail.com", orders: 8, spent: 4299, joined: "2023-08", avatar: "SJ" },
-  { id: "c2", name: "Michael Chen", email: "mchen@gmail.com", orders: 5, spent: 2891, joined: "2023-09", avatar: "MC" },
-  { id: "c3", name: "Emily Rodriguez", email: "emily.r@gmail.com", orders: 12, spent: 6120, joined: "2023-07", avatar: "ER" },
-  { id: "c4", name: "James Wilson", email: "jwilson@gmail.com", orders: 3, spent: 1450, joined: "2023-11", avatar: "JW" },
-  { id: "c5", name: "Aisha Patel", email: "aisha.p@gmail.com", orders: 7, spent: 3870, joined: "2023-10", avatar: "AP" },
-];
-
-const CATEGORIES = ["All", "iPhones", "Android Phones", "AirPods", "Headphones", "Earphones", "Chargers", "Power Banks", "Speakers", "iPhone Accessories"];
+const CATEGORIES = ["All", "iPhones", "Android Phones", "AirPods", "Headphones", "Earphones", "Chargers", "Power Banks", "Speakers", "Accessories", "iPhone Accessories"];
 
 const CHART_COLORS = ["#2563EB", "#0B1D3A", "#60A5FA", "#93C5FD", "#BFDBFE"];
 
@@ -509,6 +396,8 @@ function HomeScreen({
   onShowPhone,
   loading,
   onNavigateTab,
+  deferredPrompt,
+  onInstall,
 }: {
   products: Product[];
   banners: any[];
@@ -527,8 +416,18 @@ function HomeScreen({
   onShowPhone: () => void;
   loading?: boolean;
   onNavigateTab?: (tab: Tab) => void;
+  deferredPrompt?: any;
+  onInstall?: () => void;
 }) {
   const [heroIdx, setHeroIdx] = useState(0);
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    return localStorage.getItem("pwa_install_banner_dismissed") === "true";
+  });
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem("pwa_install_banner_dismissed", "true");
+  };
 
   const activeBanners = banners && banners.length > 0 ? banners : [
     { title: "Alpha Mobile", sub: lang === "mz" ? "Secondhand phone tha ber ber te tlawm takin!" : "Best quality secondhand phones at the best prices!", img: "1592750475338-74b7b21085ab" },
@@ -584,6 +483,37 @@ function HomeScreen({
         </div>
       </div>
 
+      {/* PWA Install Banner */}
+      {deferredPrompt && !bannerDismissed && (
+        <div className="mx-4 mb-5 p-4 rounded-3xl bg-gradient-to-tr from-blue-600/20 to-indigo-600/10 border border-blue-500/20 shadow-2xl flex items-center gap-4 animate-fade-in relative text-left">
+          <div className="w-12 h-12 rounded-2xl bg-[#0B1D3A] border border-white/10 flex items-center justify-center flex-shrink-0 shadow-lg text-white">
+            <Download size={22} className="text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0 pr-6">
+            <h4 className="font-black text-sm text-white leading-tight">
+              {lang === "mz" ? "Alpha Mobile App thun rawh" : "Install Alpha Mobile App"}
+            </h4>
+            <p className="text-[11px] text-blue-200/80 mt-0.5 leading-snug">
+              {lang === "mz" 
+                ? "Home screen ah dah la, native app ang chiahin awlsam takin hmang rawh." 
+                : "Add to home screen for a premium, fast native app experience."}
+            </p>
+            <button 
+              onClick={onInstall} 
+              className="mt-2.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-4 py-2 rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-1"
+            >
+              <Plus size={11} strokeWidth={3} /> {lang === "mz" ? "Install rawh" : "Install Now"}
+            </button>
+          </div>
+          <button 
+            onClick={dismissBanner} 
+            className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-lg transition-colors"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
       {/* Hero Banner */}
       <div className="mx-4 mb-5 rounded-3xl overflow-hidden relative h-52 border border-white/10 shadow-2xl">
         {activeBanners.map((h: any, i: number) => (
@@ -619,6 +549,7 @@ function HomeScreen({
             { l: lang === "mz" ? "Charger" : "Chargers", e: "🔌", cat: "Chargers" },
             { l: "Power Banks", e: "🔋", cat: "Power Banks" },
             { l: lang === "mz" ? "Speaker" : "Speakers", e: "🔊", cat: "Speakers" },
+            { l: lang === "mz" ? "Accessories" : "Accessories", e: "🧩", cat: "Accessories" },
             { l: lang === "mz" ? "Hmanruate" : "Accessories", e: "⚡", cat: "iPhone Accessories" }
           ].map(c => (
             <button key={c.l} onClick={() => onNavigateShop(c.cat)} className="flex-shrink-0 flex flex-col items-center gap-2 glass-card rounded-2xl p-3 w-18 cursor-pointer">
@@ -719,6 +650,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   Chargers: "🔌",
   "Power Banks": "🔋",
   Speakers: "🔊",
+  Accessories: "🧩",
   "iPhone Accessories": "⚡",
 };
 
@@ -1460,13 +1392,46 @@ function CheckoutScreen({
                     <p className="text-xs font-black text-blue-400">{fmtPrice(totalAmount)}</p>
                   </div>
 
-                  {/* Mobile Pay deep link button */}
-                  <a 
-                    href={upiUri}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all mb-4 text-center"
-                  >
-                    {t("openUpiApp", lang)}
-                  </a>
+                  {/* Step-by-Step Payment Guide */}
+                  <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 text-left mb-4 shadow-inner">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-3 flex items-center gap-1.5">
+                      <span>💡</span> {lang === "mz" ? "Pay dan tur kawng" : "How to Pay"}
+                    </p>
+                    <ol className="space-y-2.5 text-xs text-foreground font-semibold">
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[10px] font-black text-blue-400 flex-shrink-0 mt-0.5">1</span>
+                        <span>
+                          {lang === "mz" 
+                            ? "I duh ber UPI app (GPay, PhonePe, Paytm, adt.) hawng rawh." 
+                            : "Open your favorite UPI app (GPay, PhonePe, Paytm, BHIM, etc.)."}
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[10px] font-black text-blue-400 flex-shrink-0 mt-0.5">2</span>
+                        <span>
+                          {lang === "mz" 
+                            ? "A chunga QR code hi scan rawh, a nih loh pawhin a chunga UPI ID copy button hmang khan copy la, i UPI app ah khan paste rawh." 
+                            : "Scan the QR code above, or copy the UPI ID and paste it manually into the app."}
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[10px] font-black text-blue-400 flex-shrink-0 mt-0.5">3</span>
+                        <span>
+                          {lang === "mz" 
+                            ? "Thawn tur zat (Amount to Pay) chiah saw khi pay rawh. (Heads up-a sawi angin note ah khan product hming i chhu dawn nia)." 
+                            : "Enter the exact amount shown above and complete the payment."}
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[10px] font-black text-blue-400 flex-shrink-0 mt-0.5">4</span>
+                        <span>
+                          {lang === "mz" 
+                            ? "Pay zawh hnuah UTR/Transaction ID (12 digits) hi chhu la, payment screenshot hi hnuaiah hian thun bawk rawh." 
+                            : "After paying, copy the 12-digit UTR/Transaction ID and upload the receipt screenshot below."}
+                        </span>
+                      </li>
+                    </ol>
+                  </div>
 
                   {/* UTR ID and Screenshot Upload fields */}
                   <div className="w-full text-left space-y-3.5 pt-3.5 border-t border-white/5">
@@ -1739,7 +1704,9 @@ function SettingsScreen({
   setLang,
   showShopPhone,
   onShowPhone,
-  onNavigateTab
+  onNavigateTab,
+  deferredPrompt,
+  onInstall,
 }: {
   currentUser: any;
   darkMode: boolean;
@@ -1751,6 +1718,8 @@ function SettingsScreen({
   showShopPhone: boolean;
   onShowPhone: () => void;
   onNavigateTab?: (tab: Tab) => void;
+  deferredPrompt?: any;
+  onInstall?: () => void;
 }) {
   const [notifs, setNotifs] = useState(true);
   
@@ -1779,6 +1748,33 @@ function SettingsScreen({
           right: <span className="text-sm text-muted-foreground font-semibold flex items-center gap-0.5">{lang === "mz" ? "Mizo" : "English"} <ChevronRight size={13} /></span> 
         },
       ],
+    },
+    {
+      title: lang === "mz" ? "App Siamremna" : "App Settings",
+      items: [
+        {
+          icon: Download,
+          label: lang === "mz" ? "Alpha Mobile App thun rawh" : "Install App",
+          onClick: () => {
+            if (deferredPrompt && onInstall) {
+              onInstall();
+            } else {
+              alert(lang === "mz" ? "App hi i device-ah thun sa a ni tawh e." : "App is already installed on your device.");
+            }
+          },
+          right: deferredPrompt ? (
+            <button 
+              type="button" 
+              onClick={(e) => { e.stopPropagation(); if (onInstall) onInstall(); }}
+              className="text-[11px] bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg font-black active:scale-95 transition-all flex items-center gap-0.5"
+            >
+              {lang === "mz" ? "Thunna" : "Install"}
+            </button>
+          ) : (
+            <span className="text-[11px] text-muted-foreground font-black flex items-center gap-0.5">{lang === "mz" ? "Thun sa a ni" : "Installed / Ready"} <ChevronRight size={14} className="text-muted-foreground" /></span>
+          )
+        }
+      ]
     },
     {
       title: t("account", lang),
@@ -2111,28 +2107,19 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
   const revenue = activeOrders.reduce((sum, o) => sum + o.total, 0);
   const avgOrderVal = activeOrders.length > 0 ? (revenue / activeOrders.length).toFixed(0) : "0";
 
-  // Sales group by month (mock + real for chart)
-  const baselineSales = [
-    { month: "Aug", sales: 42000 }, { month: "Sep", sales: 58000 },
-    { month: "Oct", sales: 49000 }, { month: "Nov", sales: 72000 },
-    { month: "Dec", sales: 95000 }, { month: "Jan", sales: 81000 },
-  ];
-  
-  const currentMonthName = new Date().toLocaleDateString("en-US", { month: "short" });
-  const realCurrentMonthSales = orders
-    .filter(o => {
-      const date = new Date(o.date);
-      const mName = date.toLocaleDateString("en-US", { month: "short" });
-      return mName === currentMonthName && o.status !== "cancelled";
-    })
-    .reduce((sum, o) => sum + o.total, 0);
-
-  const salesData = baselineSales.map(item => {
-    if (item.month === currentMonthName) {
-      return { ...item, sales: item.sales + realCurrentMonthSales };
-    }
-    return item;
-  });
+  // Sales grouped by month from real order data (last 6 calendar months)
+  const last6Months: { month: string; sales: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const label = d.toLocaleDateString("en-US", { month: "short" });
+    const monthOrders = orders.filter(o => {
+      const od = new Date(o.date);
+      return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth() && o.status !== "cancelled";
+    });
+    last6Months.push({ month: label, sales: monthOrders.reduce((s, o) => s + o.total, 0) });
+  }
+  const salesData = last6Months;
 
   const categoriesMap: Record<string, number> = {};
   products.forEach(p => {
@@ -2147,22 +2134,22 @@ function AdminDashboardTab({ orders, products, customers }: { orders: Order[]; p
   const recentOrders = orders.slice(0, 3);
 
   const stats = [
-    { label: "Revenue", value: fmtPrice(revenue), change: "+12.5%", icon: IndianRupee },
-    { label: "Orders", value: orders.length.toString(), change: "+8.2%", icon: ShoppingBag },
+    { label: "Revenue", value: fmtPrice(revenue), change: "Live", icon: IndianRupee },
+    { label: "Orders", value: orders.length.toString(), change: "Live", icon: ShoppingBag },
     { label: "Products", value: products.length.toString(), change: "Live DB", icon: Package },
-    { label: "Customers", value: customers.length.toString(), change: "+5.1%", icon: Users },
-    { label: "Conv. Rate", value: "3.24%", change: "+0.8%", icon: TrendingUp },
-    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "+₹1,000", icon: BarChart2 },
+    { label: "Customers", value: customers.length.toString(), change: "Live", icon: Users },
+    { label: "Avg. Order", value: fmtPrice(Number(avgOrderVal)), change: "Live", icon: BarChart2 },
+    { label: "Active Orders", value: activeOrders.length.toString(), change: "Live", icon: TrendingUp },
   ];
 
   const weeklyOrdersData = [
-    { day: "Mon", orders: orders.filter(o => new Date(o.date).getDay() === 1).length * 4 + 2 },
-    { day: "Tue", orders: orders.filter(o => new Date(o.date).getDay() === 2).length * 4 + 5 },
-    { day: "Wed", orders: orders.filter(o => new Date(o.date).getDay() === 3).length * 4 + 4 },
-    { day: "Thu", orders: orders.filter(o => new Date(o.date).getDay() === 4).length * 4 + 6 },
-    { day: "Fri", orders: orders.filter(o => new Date(o.date).getDay() === 5).length * 4 + 8 },
-    { day: "Sat", orders: orders.filter(o => new Date(o.date).getDay() === 6).length * 4 + 10 },
-    { day: "Sun", orders: orders.filter(o => new Date(o.date).getDay() === 0).length * 4 + 3 },
+    { day: "Mon", orders: orders.filter(o => new Date(o.date).getDay() === 1).length },
+    { day: "Tue", orders: orders.filter(o => new Date(o.date).getDay() === 2).length },
+    { day: "Wed", orders: orders.filter(o => new Date(o.date).getDay() === 3).length },
+    { day: "Thu", orders: orders.filter(o => new Date(o.date).getDay() === 4).length },
+    { day: "Fri", orders: orders.filter(o => new Date(o.date).getDay() === 5).length },
+    { day: "Sat", orders: orders.filter(o => new Date(o.date).getDay() === 6).length },
+    { day: "Sun", orders: orders.filter(o => new Date(o.date).getDay() === 0).length },
   ];
 
   return (
@@ -2722,20 +2709,13 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
   const activeOrders = orders.filter(o => o.status !== "cancelled");
   const totalRevenue = activeOrders.reduce((sum, o) => sum + o.total, 0);
   
-  // Calculate conversion rates
-  const cartAdds = activeOrders.length * 4;
-  const sessionsCount = activeOrders.length * 15;
-  const conversionRate = sessionsCount > 0 ? ((activeOrders.length / sessionsCount) * 100).toFixed(2) : "0.00";
-  const addToCartRate = sessionsCount > 0 ? ((cartAdds / sessionsCount) * 100).toFixed(1) : "0.0";
-  const checkoutRate = sessionsCount > 0 ? ((activeOrders.length / sessionsCount) * 100).toFixed(1) : "0.0";
-
   const metrics = [
-    { label: "Daily Active Users", value: (sessionsCount > 0 ? Math.round(sessionsCount / 4) : 0).toString(), change: "+8.2%" }, 
-    { label: "Monthly Active Users", value: (sessionsCount > 0 ? Math.round(sessionsCount * 3) : 0).toString(), change: "+12.5%" },
-    { label: "Conversion Rate", value: `${conversionRate}%`, change: "+0.8%" }, 
-    { label: "Add-to-Cart Rate", value: `${addToCartRate}%`, change: "+2.1%" },
-    { label: "Checkout Rate", value: `${checkoutRate}%`, change: "+1.4%" }, 
-    { label: "Avg Session", value: "4m 32s", change: "+15s" },
+    { label: "Total Revenue", value: fmtPrice(totalRevenue), change: "Live" },
+    { label: "Total Orders", value: activeOrders.length.toString(), change: "Live" },
+    { label: "Total Products", value: products.length.toString(), change: "Live" },
+    { label: "Avg. Order Value", value: activeOrders.length > 0 ? fmtPrice(Math.round(totalRevenue / activeOrders.length)) : "—", change: "Live" },
+    { label: "Delivered Orders", value: orders.filter(o => o.status === "delivered").length.toString(), change: "Live" },
+    { label: "Pending Orders", value: orders.filter(o => o.status === "pending").length.toString(), change: "Live" },
   ];
 
   // Group by category
@@ -2769,16 +2749,16 @@ function AdminAnalyticsTab({ products, orders }: { products: Product[]; orders: 
 
   const topProductsList = sortedTopProducts.length > 0
     ? sortedTopProducts
-    : products.slice(0, 5).map((p, i) => ({ product: p, qty: 10 - i, revenue: p.price * (10 - i) }));
+    : [];
 
   const weeklyRevenueData = [
-    { day: "Mon", revenue: orders.filter(o => new Date(o.date).getDay() === 1).length * 800 + 400 },
-    { day: "Tue", revenue: orders.filter(o => new Date(o.date).getDay() === 2).length * 800 + 1200 },
-    { day: "Wed", revenue: orders.filter(o => new Date(o.date).getDay() === 3).length * 800 + 600 },
-    { day: "Thu", revenue: orders.filter(o => new Date(o.date).getDay() === 4).length * 800 + 1500 },
-    { day: "Fri", revenue: orders.filter(o => new Date(o.date).getDay() === 5).length * 800 + 2200 },
-    { day: "Sat", revenue: orders.filter(o => new Date(o.date).getDay() === 6).length * 800 + 3100 },
-    { day: "Sun", revenue: orders.filter(o => new Date(o.date).getDay() === 0).length * 800 + 800 },
+    { day: "Mon", revenue: orders.filter(o => new Date(o.date).getDay() === 1 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Tue", revenue: orders.filter(o => new Date(o.date).getDay() === 2 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Wed", revenue: orders.filter(o => new Date(o.date).getDay() === 3 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Thu", revenue: orders.filter(o => new Date(o.date).getDay() === 4 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Fri", revenue: orders.filter(o => new Date(o.date).getDay() === 5 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Sat", revenue: orders.filter(o => new Date(o.date).getDay() === 6 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
+    { day: "Sun", revenue: orders.filter(o => new Date(o.date).getDay() === 0 && o.status !== "cancelled").reduce((s, o) => s + o.total, 0) },
   ];
 
   return (
@@ -3418,10 +3398,40 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
   );
 }
 
+// ─── ROUTE GUARDS ─────────────────────────────────────────────────────────────
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const stored = localStorage.getItem("e_commerce_current_user");
+  const user = stored ? JSON.parse(stored) : null;
+  const location = useLocation();
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  }
+  return <>{children}</>;
+}
+
+function AdminRoute({ children, isLoggedIn }: { children: React.ReactNode; isLoggedIn: boolean }) {
+  if (!isLoggedIn) {
+    return <Navigate to="/admin" replace />;
+  }
+  return <>{children}</>;
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Derive active tab from current URL (no more activeTab state)
+  const activeTab: Tab = location.pathname.startsWith("/orders")
+    ? "orders"
+    : location.pathname.startsWith("/settings")
+    ? "settings"
+    : location.pathname.startsWith("/shop")
+    ? "shop"
+    : "home";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<"en" | "mz">(() => {
     const cached = localStorage.getItem("e_commerce_language");
@@ -3477,9 +3487,6 @@ export default function App() {
     setActiveToast({ id: newNotif.id, title, message, type });
   };
 
-  const [screen, setScreen] = useState<Screen>("home");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [logoTaps, setLogoTaps] = useState(0);
@@ -3513,14 +3520,13 @@ export default function App() {
   const handleAuthSuccess = (user: any) => {
     setCurrentUser(user);
     localStorage.setItem("e_commerce_current_user", JSON.stringify(user));
-    setScreen("checkout");
+    navigate("/checkout");
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem("e_commerce_current_user");
-    setActiveTab("home");
-    setScreen("home");
+    navigate("/");
   };
 
   const customerUnreadCount = notifications.filter(
@@ -3604,10 +3610,7 @@ export default function App() {
     async function initDb() {
       try {
         setDbLoading(true);
-        // Seed if empty
-        await supabaseService.seedDatabaseIfEmpty(INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_CUSTOMERS);
-        
-        // Fetch
+        // Fetch all real data from Supabase
         const [dbProds, dbOrds, dbCusts, dbBanners, dbShopInfo, dbCoupons, dbPaymentSettings] = await Promise.all([
           supabaseService.getProducts(),
           supabaseService.getOrders(),
@@ -3617,7 +3620,7 @@ export default function App() {
           supabaseService.getContentSettings("coupons", []),
           supabaseService.getContentSettings("payment_settings", { enableUpi: true, enableCod: true, shippingFee: 9.99 }),
         ]);
-        
+
         setProducts(dbProds);
         setOrders(dbOrds);
         setCustomers(dbCusts);
@@ -3626,10 +3629,7 @@ export default function App() {
         setCoupons(dbCoupons);
         setPaymentSettings(dbPaymentSettings);
       } catch (err) {
-        console.error("Failed loading Supabase data, falling back to local mocks", err);
-        setProducts(INITIAL_PRODUCTS);
-        setOrders(INITIAL_ORDERS);
-        setCustomers(INITIAL_CUSTOMERS);
+        console.error("Failed loading Supabase data:", err);
       } finally {
         setDbLoading(false);
       }
@@ -3641,7 +3641,7 @@ export default function App() {
     const next = logoTaps + 1;
     if (logoTimer.current) clearTimeout(logoTimer.current);
     if (next >= 5) {
-      setScreen("admin-login");
+      navigate("/admin");
       setLogoTaps(0);
     } else {
       setLogoTaps(next);
@@ -3657,11 +3657,8 @@ export default function App() {
   };
 
   const handleTabChange = (tab: Tab) => {
-    setActiveTab(tab);
-    setScreen(tab);
-    if (tab === "shop") {
-      setShopInitCategory(undefined);
-    }
+    if (tab === "shop") setShopInitCategory(undefined);
+    navigate(tab === "home" ? "/" : `/${tab}`);
   };
 
   // CHECKOUT MUTATION
@@ -3702,9 +3699,9 @@ export default function App() {
         await supabaseService.updateProductStock(item.product.id, newStock);
       }
 
-      // 3. Update customer info in DB and local state
-      const customerEmail = currentUser?.email || "john.doe@email.com";
-      const customerName = currentUser?.name || "John Doe";
+      // 3. Update customer info in DB and local state (only if user is logged in)
+      const customerEmail = currentUser?.email || "";
+      const customerName = currentUser?.name || "";
       const existingCust = customers.find(c => c.email === customerEmail);
       if (existingCust) {
         const updatedCust: Customer = {
@@ -3730,8 +3727,8 @@ export default function App() {
     } catch (err) {
       console.error("Error writing checkout transaction to Supabase, running local fallback:", err);
       // Fallback local updates if DB failed
-      const customerEmail = currentUser?.email || "john.doe@email.com";
-      const customerName = currentUser?.name || "John Doe";
+      const customerEmail = currentUser?.email || "";
+      const customerName = currentUser?.name || "";
       const existingCust = customers.find(c => c.email === customerEmail);
       if (existingCust) {
         const updatedCust: Customer = {
@@ -3775,7 +3772,7 @@ export default function App() {
     );
 
     setCart([]);
-    setScreen("order-success");
+    navigate("/order-success");
   };
 
   // ADMIN PRODUCTS SAVING
@@ -3885,9 +3882,35 @@ export default function App() {
     );
   };
 
+  // PWA Deferred Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
+
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-  const isAdmin = screen === "admin-login" || screen === "admin";
-  const showBottomNav = !isAdmin && screen !== "product" && screen !== "cart" && screen !== "checkout" && screen !== "order-success" && screen !== "order-detail";
+  const isAdmin = location.pathname.startsWith("/admin");
+  const showBottomNav = !isAdmin
+    && !location.pathname.match(/^\/shop\/.+/)
+    && location.pathname !== "/cart"
+    && location.pathname !== "/checkout"
+    && location.pathname !== "/order-success"
+    && !location.pathname.match(/^\/orders\/.+/);
 
 
   return (
@@ -3999,9 +4022,8 @@ export default function App() {
                         onChange={e => {
                           const val = e.target.value;
                           setSearchQuery(val);
-                          if (activeTab !== "shop" || screen !== "shop") {
-                            setActiveTab("shop");
-                            setScreen("shop");
+                          if (activeTab !== "shop") {
+                            navigate("/shop");
                           }
                         }} 
                         className="flex-1 text-xs outline-none bg-transparent placeholder:text-muted-foreground" 
@@ -4018,7 +4040,7 @@ export default function App() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                  <button onClick={() => setScreen("cart")} className="relative w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-muted transition-colors">
+                  <button onClick={() => navigate("/cart")} className="relative w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-muted transition-colors">
                     <ShoppingCart size={16} className="text-foreground" />
                     {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">{cartCount}</span>}
                   </button>
@@ -4034,94 +4056,184 @@ export default function App() {
 
             {/* Screens */}
             <div className="flex-1 flex flex-col overflow-hidden relative min-h-0">
-              {screen === "home" && (
-                <HomeScreen
-                  products={products}
-                  banners={banners}
-                  shopInfo={shopInfo}
-                  onProductSelect={p => { setSelectedProduct(p); setScreen("product"); }}
-                  onLogoTap={handleLogoTap}
-                  cartCount={cartCount}
-                  onCartOpen={() => setScreen("cart")}
-                  onAddToCart={addToCart}
-                  onNavigateShop={(cat) => { setShopInitCategory(cat && cat !== "All" ? cat : undefined); setActiveTab("shop"); setScreen("shop"); }}
-                  lang={language}
-                  onLanguageChange={handleLanguageChange}
-                  unreadCount={customerUnreadCount}
-                  onNotifOpen={() => setIsNotifDrawerOpen(true)}
-                  showShopPhone={showShopPhone}
-                  onShowPhone={() => setShowShopPhone(true)}
-                  loading={dbLoading}
-                  onNavigateTab={handleTabChange}
-                />
-              )}
-              {screen === "shop" && (
-                <ShopScreen 
-                  products={products} 
-                  onProductSelect={p => { setSelectedProduct(p); setScreen("product"); }} 
-                  initialCategory={shopInitCategory} 
-                  lang={language} 
-                  loading={dbLoading}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                  onNavigateTab={handleTabChange}
-                />
-              )}
-              {screen === "product" && selectedProduct && (
-                <ProductDetail
-                  product={selectedProduct}
-                  onBack={() => setScreen(activeTab)}
-                  onAddToCart={(p, qty) => { addToCart(p, qty); setScreen(activeTab); }}
-                  onBuyNow={(p) => {
-                    const exists = cart.some(item => item.product.id === p.id);
-                    if (!exists) {
-                      setCart(prev => [...prev, { product: p, qty: 1 }]);
-                    }
-                    if (currentUser) {
-                      setScreen("checkout");
-                    } else {
-                      setScreen("customer-auth");
-                    }
-                  }}
-                  wishlist={wishlist}
-                  onWishlist={id => setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
-                  lang={language}
-                />
-              )}
-              {screen === "cart" && <CartScreen cart={cart} onQtyChange={(id, qty) => setCart(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i))} onRemove={id => setCart(prev => prev.filter(i => i.product.id !== id))} onCheckout={() => { if (currentUser) { setScreen("checkout"); } else { setScreen("customer-auth"); } }} onBack={() => setScreen(activeTab)} coupons={coupons} lang={language} />}
-              {screen === "checkout" && <CheckoutScreen cart={cart} shopInfo={shopInfo} paymentSettings={paymentSettings} currentUser={currentUser} onBack={() => setScreen("cart")} onSuccess={handleCheckoutSuccess} lang={language} />}
-              {screen === "customer-auth" && <CustomerAuthScreen onAuthSuccess={handleAuthSuccess} onBack={() => setScreen(cart.length > 0 ? "cart" : "settings")} lang={language} />}
-              {screen === "order-success" && <OrderSuccess onContinue={() => { setActiveTab("home"); setScreen("home"); }} lang={language} />}
-              {screen === "orders" && (
-                <OrdersScreen 
-                  orders={orders} 
-                  onOrderSelect={o => { setSelectedOrder(o); setScreen("order-detail"); }} 
-                  lang={language} 
-                  onTabChange={handleTabChange}
-                />
-              )}
-              {screen === "order-detail" && selectedOrder && <OrderDetail order={selectedOrder} onBack={() => setScreen("orders")} lang={language} />}
-              {screen === "settings" && <SettingsScreen currentUser={currentUser} darkMode={darkMode} onDarkMode={setDarkMode} onLogout={handleLogout} onOpenLogin={() => setScreen("customer-auth")} lang={language} setLang={handleLanguageChange} showShopPhone={showShopPhone} onShowPhone={() => setShowShopPhone(true)} onNavigateTab={handleTabChange} />}
-              {screen === "admin-login" && <AdminLogin onLogin={() => { setAdminLoggedIn(true); setScreen("admin"); }} onBack={() => setScreen("home")} />}
-              {screen === "admin" && adminLoggedIn && (
-                <AdminDashboard
-                  products={products}
-                  orders={orders}
-                  customers={customers}
-                  banners={banners}
-                  shopInfo={shopInfo}
-                  coupons={coupons}
-                  paymentSettings={paymentSettings}
-                  onLogout={() => { setAdminLoggedIn(false); setScreen("home"); setActiveTab("home"); }}
-                  onProductSave={handleProductSave}
-                  onProductDelete={handleProductDelete}
-                  onOrderStatusUpdate={handleOrderStatusUpdate}
-                  onPaymentStatusUpdate={handlePaymentStatusUpdate}
-                  onContentSave={handleContentSave}
-                  unreadNotifCount={adminUnreadCount}
-                  onNotifOpen={() => setIsAdminNotifDrawerOpen(true)}
-                />
-              )}
+              <Routes>
+                {/* ── PUBLIC ROUTES ── */}
+                <Route path="/" element={
+                  <HomeScreen
+                    products={products}
+                    banners={banners}
+                    shopInfo={shopInfo}
+                    onProductSelect={p => navigate(`/shop/${p.id}`)}
+                    onLogoTap={handleLogoTap}
+                    cartCount={cartCount}
+                    onCartOpen={() => navigate("/cart")}
+                    onAddToCart={addToCart}
+                    onNavigateShop={(cat) => { setShopInitCategory(cat && cat !== "All" ? cat : undefined); navigate("/shop"); }}
+                    lang={language}
+                    onLanguageChange={handleLanguageChange}
+                    unreadCount={customerUnreadCount}
+                    onNotifOpen={() => setIsNotifDrawerOpen(true)}
+                    showShopPhone={showShopPhone}
+                    onShowPhone={() => setShowShopPhone(true)}
+                    loading={dbLoading}
+                    onNavigateTab={handleTabChange}
+                    deferredPrompt={deferredPrompt}
+                    onInstall={handleInstallApp}
+                  />
+                } />
+
+                <Route path="/shop" element={
+                  <ShopScreen
+                    products={products}
+                    onProductSelect={p => navigate(`/shop/${p.id}`)}
+                    initialCategory={shopInitCategory}
+                    lang={language}
+                    loading={dbLoading}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    onNavigateTab={handleTabChange}
+                  />
+                } />
+
+                <Route path="/shop/:productId" element={(() => {
+                  function ProductDetailRoute() {
+                    const { productId } = useParams<{ productId: string }>();
+                    const product = products.find(p => p.id === productId);
+                    if (dbLoading) return <div className="flex-1 flex items-center justify-center"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>;
+                    if (!product) return <Navigate to="/shop" replace />;
+                    return (
+                      <ProductDetail
+                        product={product}
+                        onBack={() => navigate("/shop")}
+                        onAddToCart={(p, qty) => { addToCart(p, qty); navigate("/shop"); }}
+                        onBuyNow={(p) => {
+                          const exists = cart.some(item => item.product.id === p.id);
+                          if (!exists) setCart(prev => [...prev, { product: p, qty: 1 }]);
+                          navigate(currentUser ? "/checkout" : "/auth");
+                        }}
+                        wishlist={wishlist}
+                        onWishlist={id => setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
+                        lang={language}
+                      />
+                    );
+                  }
+                  return <ProductDetailRoute />;
+                })()} />
+
+                <Route path="/cart" element={
+                  <CartScreen
+                    cart={cart}
+                    onQtyChange={(id, qty) => setCart(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i))}
+                    onRemove={id => setCart(prev => prev.filter(i => i.product.id !== id))}
+                    onCheckout={() => navigate(currentUser ? "/checkout" : "/auth")}
+                    onBack={() => navigate(-1 as any)}
+                    coupons={coupons}
+                    lang={language}
+                  />
+                } />
+
+                <Route path="/auth" element={
+                  currentUser
+                    ? <Navigate to="/" replace />
+                    : <CustomerAuthScreen
+                        onAuthSuccess={handleAuthSuccess}
+                        onBack={() => navigate(cart.length > 0 ? "/cart" : "/settings")}
+                        lang={language}
+                      />
+                } />
+
+                {/* ── PROTECTED ROUTES ── */}
+                <Route path="/checkout" element={
+                  <ProtectedRoute>
+                    <CheckoutScreen
+                      cart={cart}
+                      shopInfo={shopInfo}
+                      paymentSettings={paymentSettings}
+                      currentUser={currentUser}
+                      onBack={() => navigate("/cart")}
+                      onSuccess={handleCheckoutSuccess}
+                      lang={language}
+                    />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/order-success" element={
+                  <ProtectedRoute>
+                    <OrderSuccess onContinue={() => navigate("/")} lang={language} />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <OrdersScreen
+                      orders={orders}
+                      onOrderSelect={o => navigate(`/orders/${o.id}`)}
+                      lang={language}
+                      onTabChange={handleTabChange}
+                    />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/orders/:orderId" element={(() => {
+                  function OrderDetailRoute() {
+                    const { orderId } = useParams<{ orderId: string }>();
+                    const order = orders.find(o => o.id === orderId);
+                    if (!order) return <Navigate to="/orders" replace />;
+                    return <OrderDetail order={order} onBack={() => navigate("/orders")} lang={language} />;
+                  }
+                  return (
+                    <ProtectedRoute>
+                      <OrderDetailRoute />
+                    </ProtectedRoute>
+                  );
+                })()} />
+
+                <Route path="/settings" element={
+                  <SettingsScreen
+                    currentUser={currentUser}
+                    darkMode={darkMode}
+                    onDarkMode={setDarkMode}
+                    onLogout={handleLogout}
+                    onOpenLogin={() => navigate("/auth")}
+                    lang={language}
+                    setLang={handleLanguageChange}
+                    showShopPhone={showShopPhone}
+                    onShowPhone={() => setShowShopPhone(true)}
+                    onNavigateTab={handleTabChange}
+                    deferredPrompt={deferredPrompt}
+                    onInstall={handleInstallApp}
+                  />
+                } />
+
+                {/* ── ADMIN ROUTES ── */}
+                <Route path="/admin" element={
+                  adminLoggedIn
+                    ? <AdminDashboard
+                        products={products}
+                        orders={orders}
+                        customers={customers}
+                        banners={banners}
+                        shopInfo={shopInfo}
+                        coupons={coupons}
+                        paymentSettings={paymentSettings}
+                        onLogout={() => { setAdminLoggedIn(false); navigate("/"); }}
+                        onProductSave={handleProductSave}
+                        onProductDelete={handleProductDelete}
+                        onOrderStatusUpdate={handleOrderStatusUpdate}
+                        onPaymentStatusUpdate={handlePaymentStatusUpdate}
+                        onContentSave={handleContentSave}
+                        unreadNotifCount={adminUnreadCount}
+                        onNotifOpen={() => setIsAdminNotifDrawerOpen(true)}
+                      />
+                    : <AdminLogin
+                        onLogin={() => { setAdminLoggedIn(true); navigate("/admin"); }}
+                        onBack={() => navigate("/")}
+                      />
+                } />
+
+                {/* ── CATCH-ALL ── */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </div>
 
             {/* Mobile bottom nav */}
@@ -4221,11 +4333,9 @@ export default function App() {
                             markAsRead(n.id);
                             const ord = orders.find(o => o.id === n.orderId);
                             if (ord) {
-                              setSelectedOrder(ord);
-                              setScreen("order-detail");
+                              navigate(`/orders/${ord.id}`);
                             } else {
-                              setScreen("orders");
-                              setActiveTab("orders");
+                              navigate("/orders");
                             }
                             setIsNotifDrawerOpen(false);
                           }}
