@@ -334,4 +334,26 @@ export const supabaseService = {
     }
   },
 
+  // STORAGE — Upload product image to Supabase Storage
+  async uploadProductImage(file: File): Promise<string> {
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filePath = `products/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+    if (uploadError) {
+      console.error("Error uploading image:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  },
+
 };

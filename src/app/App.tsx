@@ -2253,6 +2253,7 @@ function AdminProductsTab({
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [uploadingImages, setUploadingImages] = useState<boolean[]>([false]);
 
   const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()));
 
@@ -2277,8 +2278,21 @@ function AdminProductsTab({
       setDescription("");
       setImage("");
       setImageUrls([""]);
+      setUploadingImages([false]);
     }
   }, [editingProduct, showAdd]);
+
+  const handleImageFileChange = async (index: number, file: File) => {
+    try {
+      setUploadingImages(prev => { const n = [...prev]; n[index] = true; return n; });
+      const url = await supabaseService.uploadProductImage(file);
+      setImageUrls(prev => { const n = [...prev]; n[index] = url; return n; });
+    } catch {
+      alert("Image upload failed. Please check your Supabase storage bucket.");
+    } finally {
+      setUploadingImages(prev => { const n = [...prev]; n[index] = false; return n; });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2379,38 +2393,62 @@ function AdminProductsTab({
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-muted-foreground text-[11px] font-black uppercase tracking-wide">Product Images (3:4 ratio)</label>
-                <button 
-                  type="button" 
-                  onClick={() => setImageUrls(prev => [...prev, ""])}
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-muted-foreground text-[11px] font-black uppercase tracking-wide">Product Images</label>
+                <button
+                  type="button"
+                  onClick={() => { setImageUrls(prev => [...prev, ""]); setUploadingImages(prev => [...prev, false]); }}
                   className="text-blue-400 hover:text-blue-300 text-[10px] font-black uppercase tracking-wider"
                 >
                   + Add Image
                 </button>
               </div>
-              <div className="space-y-2 max-h-36 overflow-y-auto pr-1" style={{ scrollbarWidth: "none" }}>
+              <div className="grid grid-cols-3 gap-2">
                 {imageUrls.map((url, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      value={url} 
-                      onChange={e => {
-                        const next = [...imageUrls];
-                        next[index] = e.target.value;
-                        setImageUrls(next);
-                      }} 
-                      placeholder={`Image URL ${index + 1}`} 
-                      className="flex-1 glass-input rounded-xl px-3 py-2 text-foreground text-xs outline-none focus:border-blue-500 placeholder:text-muted-foreground/30" 
-                    />
-                    {imageUrls.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => setImageUrls(prev => prev.filter((_, i) => i !== index))}
-                        className="px-2 text-red-400 hover:text-red-300 font-black text-sm"
-                      >
-                        ✕
-                      </button>
+                  <div key={index} className="relative group">
+                    <label className="block cursor-pointer">
+                      <div className={`w-full aspect-square rounded-xl border-2 border-dashed overflow-hidden flex items-center justify-center transition-all ${
+                        url ? "border-blue-500/40 bg-white/5" : "border-white/10 bg-white/5 hover:border-blue-500/40"
+                      }`}>
+                        {uploadingImages[index] ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-[9px] text-blue-400 font-bold">Uploading...</span>
+                          </div>
+                        ) : url ? (
+                          <img src={url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 p-2 text-center">
+                            <span className="text-xl">📷</span>
+                            <span className="text-[9px] text-muted-foreground font-bold">Tap to upload</span>
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFileChange(index, f); }}
+                      />
+                    </label>
+                    {url && !uploadingImages[index] && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageUrls(prev => { const n = [...prev]; n[index] = ""; return n; });
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      >✕</button>
+                    )}
+                    {imageUrls.length > 1 && !url && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageUrls(prev => prev.filter((_, i) => i !== index));
+                          setUploadingImages(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500/80 text-white flex items-center justify-center text-[10px]"
+                      >✕</button>
                     )}
                   </div>
                 ))}
