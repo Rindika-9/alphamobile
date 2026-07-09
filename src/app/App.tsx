@@ -2287,8 +2287,8 @@ function AdminProductsTab({
       setUploadingImages(prev => { const n = [...prev]; n[index] = true; return n; });
       const url = await supabaseService.uploadProductImage(file);
       setImageUrls(prev => { const n = [...prev]; n[index] = url; return n; });
-    } catch {
-      alert("Image upload failed. Please check your Supabase storage bucket.");
+    } catch (err: any) {
+      alert("Image upload failed: " + (err?.message || JSON.stringify(err)));
     } finally {
       setUploadingImages(prev => { const n = [...prev]; n[index] = false; return n; });
     }
