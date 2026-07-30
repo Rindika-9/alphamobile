@@ -20,6 +20,8 @@ import {
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import shopLogo from "@/imports/image.png";
 import { supabaseService, Product, Order, Customer, CartItem } from "./services/supabaseService";
+import { QRCodeSVG } from "qrcode.react";
+
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -1352,10 +1354,12 @@ function CheckoutScreen({
                   
                   {/* QR Code */}
                   <div className="bg-white p-3 rounded-2xl border border-white/10 shadow-sm inline-block mb-3.5 relative group">
-                    <img 
-                      src={qrCodeUrl} 
-                      alt="UPI Payment QR Code" 
-                      className="w-36 h-36 object-contain"
+                    <QRCodeSVG 
+                      value={upiUri} 
+                      size={160}
+                      level="H"
+                      includeMargin={true}
+                      className="w-36 h-36"
                     />
                     <div className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none">
                       <span className="text-white text-[10px] bg-black/70 px-2 py-1 rounded-full font-bold">GPay QR Code</span>
@@ -3147,7 +3151,13 @@ function AdminPaymentsTab({
             {/* Live QR Preview */}
             <div className="flex items-center gap-4 glass-card bg-white/[0.01] rounded-xl p-3 border border-white/5">
               <div className="bg-white p-2 rounded-xl flex-shrink-0">
-                <img src={qrUrl} alt="UPI QR Preview" className="w-20 h-20 object-contain" />
+                <QRCodeSVG 
+                  value={upiUri} 
+                  size={80}
+                  level="H"
+                  includeMargin={true}
+                  className="w-20 h-20"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-muted-foreground text-[10px] font-black uppercase tracking-wider mb-1">Live QR Preview</p>
@@ -3642,12 +3652,14 @@ export default function App() {
     shippingFee: 9.99,
   });
   const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   // Initialize DB and load
   useEffect(() => {
     async function initDb() {
       try {
         setDbLoading(true);
+        setDbError(null);
         // Fetch all real data from Supabase
         const [dbProds, dbOrds, dbCusts, dbBanners, dbShopInfo, dbCoupons, dbPaymentSettings] = await Promise.all([
           supabaseService.getProducts(),
@@ -3666,8 +3678,9 @@ export default function App() {
         setShopInfo(dbShopInfo);
         setCoupons(dbCoupons);
         setPaymentSettings(dbPaymentSettings);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed loading Supabase data:", err);
+        setDbError("Database connection failed. If your Supabase project is paused, please restore it in your Supabase Dashboard.");
       } finally {
         setDbLoading(false);
       }
@@ -4035,6 +4048,23 @@ export default function App() {
 
           {/* ── MAIN CONTENT COLUMN ── */}
           <div className="flex-1 flex flex-col overflow-hidden relative min-h-0 bg-background">
+
+            {dbError && (
+              <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between gap-3 text-amber-200 text-xs font-semibold z-20">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="text-amber-400 flex-shrink-0" />
+                  <span>{dbError}</span>
+                </div>
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-amber-500 hover:bg-amber-600 text-black text-[11px] font-black px-3 py-1 rounded-lg transition-colors flex-shrink-0"
+                >
+                  Unpause on Supabase
+                </a>
+              </div>
+            )}
 
 
 
