@@ -1261,7 +1261,7 @@ function CheckoutScreen({
   const upiId = shopInfo?.upiId || "9612217093@paytm";
   const shopName = shopInfo?.name || "Alpha Mobile";
   const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shopName)}&am=${totalAmount.toFixed(2)}&cu=INR`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiUri)}`;
+  const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiUri)}&size=200`;
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden h-full relative">
@@ -1357,9 +1357,11 @@ function CheckoutScreen({
                     <QRCodeSVG 
                       value={upiUri} 
                       size={160}
+                      bgColor="#ffffff"
+                      fgColor="#000000"
                       level="H"
                       includeMargin={true}
-                      className="w-36 h-36"
+                      className="w-36 h-36 mx-auto"
                     />
                     <div className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none">
                       <span className="text-white text-[10px] bg-black/70 px-2 py-1 rounded-full font-bold">GPay QR Code</span>
@@ -3105,7 +3107,7 @@ function AdminPaymentsTab({
   };
 
   const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shopInfo?.name || "Alpha Mobile")}&am=0&cu=INR`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUri)}`;
+  const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiUri)}&size=200`;
 
   return (
     <div className="mt-2 text-foreground text-left space-y-4">
@@ -3154,6 +3156,8 @@ function AdminPaymentsTab({
                 <QRCodeSVG 
                   value={upiUri} 
                   size={80}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
                   level="H"
                   includeMargin={true}
                   className="w-20 h-20"
