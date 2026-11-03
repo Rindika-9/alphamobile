@@ -1275,6 +1275,7 @@ function CheckoutScreen({
   currentUser,
   onBack,
   onSuccess,
+  onLogin,
   lang
 }: {
   cart: CartItem[];
@@ -1282,6 +1283,7 @@ function CheckoutScreen({
   paymentSettings?: any;
   coupons: any[];
   couponCode: string | null;
+  onLogin?: () => void;
   currentUser: any;
   onBack: () => void;
   onSuccess: (
@@ -1306,6 +1308,72 @@ function CheckoutScreen({
   const [street, setStreet] = useState(currentUser?.address || "");
   const [city, setCity] = useState("");
   const [stateZip, setStateZip] = useState(currentUser?.pincode || "");
+
+  // Guest checkout: no account yet → Gmail + password here, and the account is
+  // created (or the existing one logged in) when they continue from step 1.
+  const isGuest = !currentUser;
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPassword, setGuestPassword] = useState("");
+  const [guestTerms, setGuestTerms] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
+
+  const createGuestAccount = async (): Promise<boolean> => {
+    const mz = lang === "mz";
+    const email = guestEmail.toLowerCase().trim();
+    if (!email || !email.endsWith("@gmail.com")) {
+      alert(mz ? "Gmail address @gmail.com a ni tur a ni." : "Gmail address ending with @gmail.com is required.");
+      return false;
+    }
+    if (guestPassword.length < 6) {
+      alert(mz ? "Password chu character 6 aia tlem lo a ni tur a ni." : "Password must be at least 6 characters.");
+      return false;
+    }
+    if (!guestTerms) {
+      alert(mz ? "Terms leh Privacy Policy i pawm hmasak a ngai e." : "You must accept the Terms of Service and Privacy Policy to continue.");
+      return false;
+    }
+    setCreatingAccount(true);
+    try {
+      const data = await supabaseService.signUp({
+        email,
+        password: guestPassword,
+        name: fullName.trim(),
+        phone: phone.trim(),
+        pincode: stateZip.trim(),
+        address: `${street.trim()}, ${city.trim()}`,
+        redirectTo: SITE_URL,
+      });
+      const exists = !!data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+      if (data.session) return true;
+      if (!exists) {
+        alert(mz
+          ? "I Gmail-ah confirm link kan thawn e. Confirm la, lut leh la, order chu siam leh rawh."
+          : "We sent a confirmation link to your Gmail. Confirm it, log in, then place your order.");
+        return false;
+      }
+    } catch (err: any) {
+      const msg = (err?.message || "").toLowerCase();
+      if (!msg.includes("already registered") && !msg.includes("already exists")) {
+        alert(friendlyError(err, lang));
+        return false;
+      }
+    } finally {
+      setCreatingAccount(false);
+    }
+    // The Gmail already has an account → log in with the password they typed.
+    setCreatingAccount(true);
+    try {
+      await supabaseService.signIn(email, guestPassword);
+      return true;
+    } catch {
+      alert(mz
+        ? "He Gmail hmang hian account a awm tawh. Password a dik lo — a dik chhu rawh, a nih loh pawhin \"Lut rawh\" hmet la, password i theihnghilh chuan thlak rawh."
+        : "An account with this Gmail already exists and the password is wrong. Enter the right password, or tap \"Log In\" (you can reset the password there).");
+      return false;
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
 
   const [utr, setUtr] = useState("");
   // Preview URL for the chosen file; the File itself is uploaded to the
@@ -1385,6 +1453,53 @@ function CheckoutScreen({
                   <input type="text" value={stateZip} onChange={e => setStateZip(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
                 </div>
               </div>
+
+              {isGuest && (
+                <div className="space-y-3 pt-4 mt-2 border-t border-white/5">
+                  <div>
+                    <h4 className="font-black text-sm">{lang === "mz" ? "I account" : "Your account"}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {lang === "mz"
+                        ? "I order chhui zui nan account kan siam sak ang che. Account i nei tawh chuan i password chhu mai rawh."
+                        : "We'll create an account so you can track this order. Already have one? Just enter its password."}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground mb-1.5 block">Gmail Address</label>
+                    <input type="email" placeholder="example@gmail.com" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{lang === "mz" ? "Password (character 6 aia tam)" : "Password (6+ characters)"}</label>
+                    <input type="password" placeholder="••••••" value={guestPassword} onChange={e => setGuestPassword(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-colors shadow-sm" />
+                  </div>
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <input type="checkbox" id="checkoutTerms" checked={guestTerms} onChange={e => setGuestTerms(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-accent" />
+                    <label htmlFor="checkoutTerms" className="text-xs text-muted-foreground leading-tight select-none">
+                      {lang === "mz" ? (
+                        <>
+                          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "terms" }))} className="text-primary font-bold hover:underline">Terms of Service</button>
+                          {" leh "}
+                          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "privacy" }))} className="text-primary font-bold hover:underline">Privacy Policy</button>
+                          {" te hi ka pawm e."}
+                        </>
+                      ) : (
+                        <>
+                          I accept the{" "}
+                          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "terms" }))} className="text-primary font-bold hover:underline">Terms of Service</button>
+                          {" and "}
+                          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("open-footer-modal", { detail: "privacy" }))} className="text-primary font-bold hover:underline">Privacy Policy</button>
+                          {"."}
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  {onLogin && (
+                    <button type="button" onClick={onLogin} className="text-xs text-primary font-bold hover:underline">
+                      {lang === "mz" ? "Account i nei tawh em? Lut rawh" : "Already have an account? Log In"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
           {step === 1 && (
@@ -1584,15 +1699,16 @@ function CheckoutScreen({
 
       <div className="bg-background/80 backdrop-blur-md border-t border-white/5 px-4 pb-6 pt-3 z-20 flex-shrink-0">
         <button
-          disabled={placing}
+          disabled={placing || creatingAccount}
           onClick={async () => {
-            if (placing) return;
+            if (placing || creatingAccount) return;
             if (step < 2) {
               if (step === 0) {
                 if (!fullName.trim() || !phone.trim() || !street.trim() || !city.trim() || !stateZip.trim()) {
                   alert(lang === "mz" ? "Khawngaihin hming, phone number, address, khua, leh pincode dah vek rawh." : "Please fill in all address details.");
                   return;
                 }
+                if (isGuest && !(await createGuestAccount())) return;
               }
               setStep(s => s + 1);
             } else {
@@ -4131,8 +4247,12 @@ export default function App() {
     utr?: string,
     screenshotFile?: File
   ) => {
-    if (!currentUser) {
-      navigate("/auth");
+    // The account may have been created a moment ago in checkout step 1, before
+    // the profile finished loading, so take the user id from the live session.
+    const { data: sessData } = await supabase.auth.getSession();
+    const userId = sessData.session?.user?.id || currentUser?.id;
+    if (!userId) {
+      alert(friendlyError({ message: "not_authenticated" }, language));
       return;
     }
 
@@ -4147,7 +4267,7 @@ export default function App() {
     try {
       // 1. Upload the payment screenshot to the private bucket (path only is saved)
       if (paymentMethod === "gpay" && screenshotFile) {
-        screenshotPath = await supabaseService.uploadPaymentProof(currentUser.id, screenshotFile);
+        screenshotPath = await supabaseService.uploadPaymentProof(userId, screenshotFile);
       }
 
       // 2. Create the order in ONE DB transaction: stock check, prices from the
@@ -4532,7 +4652,7 @@ export default function App() {
                         onBuyNow={(p) => {
                           const exists = cart.some(item => item.product.id === p.id);
                           if (!exists) setCart(prev => [...prev, { product: p, qty: 1 }]);
-                          navigate(currentUser ? "/checkout" : "/auth");
+                          navigate("/checkout");
                         }}
                         wishlist={wishlist}
                         onWishlist={id => setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
@@ -4548,7 +4668,7 @@ export default function App() {
                     cart={cart}
                     onQtyChange={(id, qty) => setCart(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i))}
                     onRemove={id => setCart(prev => prev.filter(i => i.product.id !== id))}
-                    onCheckout={() => navigate(currentUser ? "/checkout" : "/auth")}
+                    onCheckout={() => navigate("/checkout")}
                     onBack={() => navigate(-1 as any)}
                     coupons={coupons}
                     paymentSettings={paymentSettings}
@@ -4570,7 +4690,7 @@ export default function App() {
 
                 {/* ── PROTECTED ROUTES ── */}
                 <Route path="/checkout" element={
-                  <ProtectedRoute authReady={authReady} hasSession={!!session} currentUser={currentUser}>
+                  !authReady ? <RouteSpinner /> : (
                     <CheckoutScreen
                       cart={cart}
                       shopInfo={shopInfo}
@@ -4580,9 +4700,10 @@ export default function App() {
                       currentUser={currentUser}
                       onBack={() => navigate("/cart")}
                       onSuccess={handleCheckoutSuccess}
+                      onLogin={() => navigate("/auth")}
                       lang={language}
                     />
-                  </ProtectedRoute>
+                  )
                 } />
 
                 <Route path="/order-success" element={
