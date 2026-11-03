@@ -107,3 +107,47 @@ versionName 1.0.0 · minSdk 24 · targetSdk/compileSdk 36. Capacitor 8.6.
     under the QR code, tell me and I'll add it in the same blue button style.
 22. [ ] `local.properties` points to `C:/Users/Onema/AppData/Local/Android/Sdk`. Git ignores
     it. Android Studio will rewrite it if your SDK is somewhere else.
+
+---
+
+## Phase 4 — Store prep and final check
+
+23. [ ] **Deploy the website to Vercel** (merge or push `play-release`, or deploy that branch).
+    Then open `https://YOUR-SITE/privacy` and `https://YOUR-SITE/delete-account`. Play needs
+    both URLs.
+24. [ ] **Fill in Play Console** from `PLAY_STORE.md`: descriptions, Data safety, content
+    rating, app access with a test customer login, and graphics.
+25. [ ] **End-to-end test after step 2 (migration).** I could not run this against your real
+    Supabase, because the migration isn't applied there yet and testing would create real
+    orders. Do it once on the website and once in the Android app:
+    1. Register a new customer, confirm the e-mail if confirmation is on, then log in.
+    2. Add a product, apply a coupon, and check that Cart, Checkout, the QR amount and the
+       Review total all match.
+    3. Pay by UPI: upload a screenshot, enter a UTR, and place the order.
+    4. On a second device logged in as admin: the "New Order Received" toast appears without
+       a refresh, and the screenshot opens.
+    5. Admin sets Payment Status to **Paid** and Order Status to **Confirmed**.
+    6. The customer gets the "Order Status Updated" toast. Payment status stays Paid after a
+       refresh.
+    7. Settings → Delete My Account on a test customer, then check that the user is gone in
+       Supabase → Authentication.
+26. [ ] **Security note (found while checking).** Right now, before the migration, anyone with
+    the public key can read **all orders** (`/rest/v1/orders`). The old live `orders` table
+    also has **no `payment_status` column**, so the old app's order inserts were failing
+    and the app only pretended to save them. Running step 2 fixes both. Please do it soon.
+
+### What I verified
+
+- `pnpm build` passes after every phase, and a TypeScript check is clean.
+- The migration was run **twice** (it is re-runnable) on a local test Postgres (PGlite) with
+  stub `auth`/`storage` schemas and your live table shapes. 46 checks passed: prices from
+  the DB, coupon, shipping and free-shipping threshold, stock decrement and out-of-stock
+  rollback, `price_changed`, UPI screenshot folder check, RLS for customer/other/admin,
+  storage rules, `payment_meta` on old JSON rows, and `delete_my_account` keeping orders but
+  unlinking them.
+- The built website renders `/`, `/auth`, `/admin` (no pre-filled credentials or hint),
+  `/privacy` and `/delete-account` in headless Chrome.
+- `gradlew bundleRelease` builds `app-release.aab` (unsigned until you add your key).
+- **Not verified:** the real Supabase project, the Android app on a device or emulator
+  (none is set up on this PC), and that Supabase lets `delete_my_account()` delete from
+  `auth.users` on your plan. It normally does. Test it with step 25.7.

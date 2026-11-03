@@ -4315,6 +4315,7 @@ export default function App() {
     && location.pathname !== "/checkout"
     && location.pathname !== "/order-success"
     && location.pathname !== "/delete-account"
+    && location.pathname !== "/privacy"
     && !location.pathname.match(/^\/orders\/.+/);
 
 
@@ -4634,6 +4635,7 @@ export default function App() {
                 } />
 
                 <Route path="/delete-account" element={<DeleteAccountPage lang={language} onBack={() => navigate("/")} />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage onBack={() => navigate("/")} />} />
 
                 {/* ── ADMIN ROUTES ── */}
                 <Route path="/admin" element={
@@ -5494,6 +5496,63 @@ function DeleteAccountPage({ lang, onBack }: { lang: "en" | "mz"; onBack: () => 
               ? "Order i siam tawhte (thil lei, man, delivery hming/phone/address, UTR) chu dawr chhut leh tax record atan i account tel lovin kan la vawng ang."
               : "Orders you already placed (items, amounts, the delivery name/phone/address and UTR) are kept, no longer linked to any account, because the shop needs them for accounting and tax records."}
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PUBLIC PAGE: /privacy (Google Play privacy-policy URL) ───────────────────
+
+function PrivacyPolicyPage({ onBack }: { onBack: () => void }) {
+  const H = ({ children }: { children: React.ReactNode }) => <p className="font-bold text-foreground pt-2">{children}</p>;
+  return (
+    <div className="flex-grow flex flex-col overflow-hidden h-full relative">
+      <div className="flex items-center gap-3 px-4 pt-4 pb-4 bg-background/80 backdrop-blur-md z-10 border-b border-white/5 flex-shrink-0">
+        <button onClick={onBack} className="w-11 h-11 rounded-xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all"><ArrowLeft size={18} /></button>
+        <h2 className="font-black text-lg">Privacy Policy</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 text-left" style={{ scrollbarWidth: "none" }}>
+        <div className="glass-card rounded-2xl p-5 shadow-sm text-xs text-muted-foreground leading-relaxed space-y-3 max-w-3xl mx-auto">
+          <p className="font-bold text-foreground">Last Updated: November 3, 2026</p>
+          <p>Alpha Mobile ("we", "us") is a mobile phone and accessories shop in Bazar Bungkawn, Aizawl, Mizoram, India. Alpha Mobile values your privacy. This Privacy Policy details how we collect, use, and protect your information when you purchase from our store or use our website or Android app (together, the "App").</p>
+
+          <H>1. Information We Collect</H>
+          <p>We collect personal information that you provide to us when you create an account or place an order:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><b className="text-foreground">Account details:</b> full name, Gmail address and a password. Your password is handled by our authentication provider and is never stored by us in readable form.</li>
+            <li><b className="text-foreground">Contact and delivery details:</b> phone number, delivery address, city and pincode.</li>
+            <li><b className="text-foreground">Order details:</b> the products you order, quantities, prices, coupon used, order status and order history.</li>
+            <li><b className="text-foreground">UPI payment proof:</b> if you pay by UPI, the UPI transaction ID (UTR) you enter and the payment screenshot you upload. We do not collect or store your UPI PIN, bank account or card numbers. The payment itself happens in your own UPI app (Google Pay, PhonePe, Paytm, etc.).</li>
+            <li><b className="text-foreground">On your device only:</b> your language choice, your notification list and whether you dismissed the install banner are saved in the App's local storage on your device.</li>
+          </ul>
+          <p>We do not use advertising, analytics or tracking SDKs, and we do not collect your location, contacts, photos (other than the screenshot you choose to upload) or device identifiers.</p>
+
+          <H>2. How We Use Your Information</H>
+          <p>Your details are used solely to process your orders, verify your UPI payment, contact you for delivery, manage your account, and provide updates regarding your order status via in-app notifications.</p>
+
+          <H>3. Information Sharing and Processors</H>
+          <p>We do not sell, lease, or share your personal information with third parties for marketing. Your data is only accessed by authorized Alpha Mobile administrators for processing order fulfilments.</p>
+          <p>We use <b className="text-foreground">Supabase</b> (Supabase Inc.) as our data processor to host our database, user accounts and file storage (payment screenshots). Data is transmitted over encrypted HTTPS connections. Our website is hosted on Vercel. These providers process data only on our behalf.</p>
+          <p>We may disclose information if required by law.</p>
+
+          <H>4. Security of Data</H>
+          <p>We implement standard, modern security measures to safeguard your credentials and personal info: encrypted connections, access rules so that each customer can only see their own orders, and a private storage bucket for payment screenshots that only you and our administrators can open. You are responsible for keeping your login password confidential.</p>
+
+          <H>5. Data Retention</H>
+          <p>We keep your account and profile while your account exists. Order records (items, amounts, delivery name, phone and address, UTR) are kept for our accounting and tax records, even after you delete your account; they are then no longer linked to any account.</p>
+
+          <H>6. Your Rights and Account Deletion</H>
+          <p>You can see and correct your details by contacting us. You can delete your account at any time in the App: Profile / Settings → Account → "Delete My Account". This deletes your login, profile and uploaded payment screenshots. You can also request deletion by e-mail. Full instructions: <a href="/delete-account" className="text-blue-400 font-bold hover:underline">/delete-account</a>.</p>
+
+          <H>7. Children</H>
+          <p>The App is not directed to children under 13 and we do not knowingly collect their information.</p>
+
+          <H>8. Changes to This Policy</H>
+          <p>We may update this policy. The "Last Updated" date above shows when it was last changed.</p>
+
+          <H>9. Contact</H>
+          <p>Alpha Mobile, Bazar Bungkawn, Aizawl, Mizoram, India<br />E-mail: <a href="mailto:alphamobilemizoram@gmail.com" className="text-blue-400 font-bold hover:underline">alphamobilemizoram@gmail.com</a><br />Phone / WhatsApp: 9612217093</p>
         </div>
       </div>
     </div>
