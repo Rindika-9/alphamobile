@@ -48,3 +48,23 @@ Do these in order. Tick each box when it's done. I never guessed or committed an
 10. [ ] **Check the new Mizo text.** I wrote the "Delete My Account", "Forgot password", and
     `/delete-account` page text in Mizo myself. Please read and correct it in
     `src/app/App.tsx` (search `deleteAccount`, `forgotPassword`, `DeleteAccountPage`).
+
+---
+
+## Phase 2 — Bugs
+
+11. [ ] **If you already ran `001_security.sql` before Phase 2, run it again.** It now also
+    checks the total the customer saw (`p_expected_total`). The file is safe to re-run.
+12. [ ] **Free-shipping threshold.** Admin → Payments → Shipping Fee → "Free above ₹".
+    The default is `0`, which means free shipping is off and the shipping fee is charged on
+    every order. The old hidden "free above ₹100" rule is gone, so set this value if you
+    still want free shipping. Then press **Save Payment Settings**.
+13. [ ] **Realtime.** The migration adds `orders` to the `supabase_realtime` publication.
+    To confirm, go to Dashboard → Database → Publications → `supabase_realtime` and check
+    that `orders` is ticked. New orders appear on the admin's phone live, and customers get
+    a toast when you change their order status. Both need the app to be open; this is not a
+    push notification.
+14. [ ] Notifications are now cached per account on each device. Old local notifications
+    from before this update are cleared once.
+15. [ ] Not done (optional item 2.7): splitting `App.tsx` into `screens/` and `admin/`
+    files. I skipped it to avoid any behaviour change before the Play release.

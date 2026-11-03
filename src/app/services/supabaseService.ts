@@ -76,6 +76,8 @@ export interface PlaceOrderInput {
   utr?: string;
   screenshotPath?: string;
   couponCode?: string;
+  /** Total shown to the customer (and paid by UPI). Server rejects a mismatch. */
+  expectedTotal?: number;
 }
 
 // Columns for order lists. The legacy `payment` column is NOT selected because
@@ -329,6 +331,7 @@ export const supabaseService = {
       p_utr: input.utr || null,
       p_screenshot_path: input.screenshotPath || null,
       p_coupon_code: input.couponCode || null,
+      p_expected_total: input.expectedTotal ?? null,
     });
     if (error) {
       console.error("Error placing order:", error);
@@ -354,8 +357,15 @@ export const supabaseService = {
   },
 
   async updatePaymentStatus(id: string, paymentStatus: Order["paymentStatus"]): Promise<void> {
-    // Phase 2: saved to the DB (was local-only before).
-    console.log("Payment status update (local):", id, paymentStatus);
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_status: paymentStatus })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating payment status in Supabase:", error);
+      throw error;
+    }
   },
 
   // ── PAYMENT PROOFS (private bucket) ───────────────────────────────────────

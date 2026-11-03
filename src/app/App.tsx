@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import shopLogo from "@/imports/image.png";
-import { supabaseService, Product, Order, Customer, CartItem, Profile } from "./services/supabaseService";
+import { supabaseService, mapDbOrder, Product, Order, Customer, CartItem, Profile } from "./services/supabaseService";
 import { supabase } from "./lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { QRCodeSVG } from "qrcode.react";
@@ -178,6 +178,32 @@ const CHART_COLORS = ["#2563EB", "#0B1D3A", "#60A5FA", "#93C5FD", "#BFDBFE"];
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 
 const fmtPrice = (p: number) => `₹${p.toLocaleString()}`;
+
+const getStatusLabel = (s: Order["status"], l: "en" | "mz") => {
+  const labels: Record<string, { en: string; mz: string }> = {
+    pending:          { en: "Pending Confirmation",   mz: "Nemngheh nghah mek"       },
+    confirmed:        { en: "Confirmed",               mz: "Pawm a ni ta"             },
+    processing:       { en: "Processing",              mz: "Tih mek a ni"             },
+    shipped:          { en: "Shipped",                 mz: "Thawn chhuah a ni ta"     },
+    "out-for-delivery": { en: "Out For Delivery",     mz: "A hlawhchhuah mek a ni"   },
+    delivered:        { en: "Delivered",               mz: "Thleng tawh a ni"         },
+    cancelled:        { en: "Cancelled",               mz: "Sut leh a ni ta"          },
+  };
+  return labels[s]?.[l] || s;
+};
+
+// Same rules as place_order() in supabase/migrations/001_security.sql — the
+// server recalculates and rejects the order if the totals don't match.
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const findCoupon = (coupons: any[], code?: string | null) =>
+  code ? (coupons || []).find((c: any) => c.code?.toUpperCase() === code.toUpperCase().trim()) || null : null;
+const couponDiscount = (subtotal: number, coupon: any) =>
+  coupon ? round2(subtotal * Math.min(Math.max(Number(coupon.discountPercent) || 0, 0), 100) / 100) : 0;
+const calcShipping = (subtotal: number, paymentSettings: any) => {
+  const fee = Math.max(0, Number(paymentSettings?.shippingFee ?? 9.99) || 0);
+  const freeAbove = Math.max(0, Number(paymentSettings?.freeShippingAbove ?? 0) || 0);
+  return freeAbove > 0 && subtotal > freeAbove ? 0 : fee;
+};
 
 /** Public website (used in auth e-mails and for /privacy, /delete-account). */
 const SITE_URL = ((import.meta.env.VITE_SITE_URL as string) || window.location.origin).replace(/\/$/, "");
@@ -1118,31 +1144,34 @@ function ProductDetail({ product, onBack, onAddToCart, onBuyNow, wishlist, onWis
 
 // ─── CART SCREEN ──────────────────────────────────────────────────────────────
 
-function CartScreen({ cart, onQtyChange, onRemove, onCheckout, onBack, coupons, lang }: {
+function CartScreen({ cart, onQtyChange, onRemove, onCheckout, onBack, coupons, paymentSettings, appliedCouponCode, onApplyCoupon, lang }: {
   cart: CartItem[];
   onQtyChange: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
   onCheckout: () => void;
   onBack: () => void;
   coupons: any[];
+  paymentSettings: any;
+  appliedCouponCode: string | null;
+  onApplyCoupon: (code: string | null) => void;
   lang: "en" | "mz";
 }) {
-  const [coupon, setCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
+  const [coupon, setCoupon] = useState(appliedCouponCode || "");
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
   const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const shipping = subtotal > 100 ? 0 : 9.99;
-  const total = subtotal + shipping - discount;
+  // The applied coupon lives in App so it carries to Checkout and the order.
+  const discount = couponDiscount(subtotal, findCoupon(coupons, appliedCouponCode));
+  const shipping = calcShipping(subtotal, paymentSettings);
+  const total = round2(subtotal + shipping - discount);
 
   const applyCoupon = () => {
     const code = coupon.toUpperCase().trim();
-    const found = coupons.find((c: any) => c.code?.toUpperCase() === code);
+    const found = findCoupon(coupons, code);
     if (found) {
-      const disc = subtotal * (found.discountPercent / 100);
-      setDiscount(disc);
+      onApplyCoupon(found.code.toUpperCase());
       setCouponMsg(lang === "mz" ? `✓ ${found.description || found.discountPercent + '% off'} hman a ni e!` : `✓ ${found.description || found.discountPercent + '% off'} applied!`);
     } else {
-      setDiscount(0);
+      onApplyCoupon(null);
       setCouponMsg(lang === "mz" ? '❌ Coupon code a dik lo' : '❌ Invalid coupon code');
     }
   };
@@ -1236,6 +1265,8 @@ function CheckoutScreen({
   cart,
   shopInfo,
   paymentSettings,
+  coupons,
+  couponCode,
   currentUser,
   onBack,
   onSuccess,
@@ -1244,6 +1275,8 @@ function CheckoutScreen({
   cart: CartItem[];
   shopInfo: any;
   paymentSettings?: any;
+  coupons: any[];
+  couponCode: string | null;
   currentUser: any;
   onBack: () => void;
   onSuccess: (
@@ -1258,7 +1291,6 @@ function CheckoutScreen({
 }) {
   const enableUpi = paymentSettings?.enableUpi !== false;
   const enableCod = paymentSettings?.enableCod !== false;
-  const shippingFeeValue = paymentSettings?.shippingFee ?? 9.99;
 
   const [step, setStep] = useState(0);
   const [payment, setPayment] = useState<"gpay" | "cod">(enableUpi ? "gpay" : "cod");
@@ -1294,13 +1326,13 @@ function CheckoutScreen({
   };
 
   const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const totalAmount = total + (total > 100 ? 0 : shippingFeeValue);
+  const discount = couponDiscount(total, findCoupon(coupons, couponCode));
+  const totalAmount = round2(total - discount + calcShipping(total, paymentSettings));
   const steps = lang === "mz" ? ["A thawnna", "Pek dan tur", "Ennawnna"] : ["Address", "Payment", "Review"];
 
   const upiId = shopInfo?.upiId || "9612217093@paytm";
   const shopName = shopInfo?.name || "Alpha Mobile";
   const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shopName)}&am=${totalAmount.toFixed(2)}&cu=INR`;
-  const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiUri)}&size=200`;
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden h-full relative">
@@ -1537,6 +1569,7 @@ function CheckoutScreen({
               <div className="glass-card rounded-2xl p-4 space-y-3">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">{lang === "mz" ? "Pek dan tur" : "Payment"}</span><span className="font-bold">{payment === "gpay" ? "UPI Payment" : (lang === "mz" ? "Cash on Delivery" : "Cash on Delivery")}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Address</span><span className="font-bold text-right">{street}, {city}</span></div>
+                {discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">{lang === "mz" ? "Tlawmna" : "Discount"}</span><span className="font-bold text-green-400">-{fmtPrice(discount)}</span></div>}
                 <div className="flex justify-between font-black pt-1 border-t border-white/5"><span>{t("total", lang)}</span><span className="text-blue-400">{fmtPrice(totalAmount)}</span></div>
               </div>
             </div>
@@ -1670,7 +1703,7 @@ function OrdersScreen({
                 {o.items.length > 3 && <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center"><span className="text-sm font-black text-muted-foreground">+{o.items.length - 3}</span></div>}
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">{o.items.reduce((s, i) => s + i.qty, 0)} {lang === "mz" ? "thilte" : "items"} · {o.payment === "gpay" ? "UPI" : (lang === "mz" ? "COD" : "COD")}</p>
+                <p className="text-xs text-muted-foreground">{o.items.reduce((s, i) => s + i.qty, 0)} {lang === "mz" ? "thilte" : "items"} · {o.payment === "Cash On Delivery" ? "COD" : "UPI"}</p>
                 <div className="flex items-center gap-1"><span className="font-black text-blue-400">{fmtPrice(o.total)}</span><ChevronRight size={14} className="text-muted-foreground" /></div>
               </div>
             </button>
@@ -1736,7 +1769,7 @@ function OrderDetail({ order, onBack, lang }: { order: Order; onBack: () => void
 
         <div className="glass-card rounded-2xl p-4 shadow-sm space-y-3">
           <div className="flex gap-3"><MapPin size={16} className="text-blue-400 flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{t("deliveryAddress", lang)}</p><p className="text-sm">{order.address}</p></div></div>
-          <div className="flex gap-3"><CreditCard size={16} className="text-blue-400 flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{lang === "mz" ? "Pek dan tur" : "Payment"}</p><p className="text-sm">{order.payment === "gpay" ? "UPI" : (lang === "mz" ? "COD" : "COD")}</p></div></div>
+          <div className="flex gap-3"><CreditCard size={16} className="text-blue-400 flex-shrink-0 mt-0.5" /><div><p className="text-xs font-bold text-muted-foreground mb-0.5">{lang === "mz" ? "Pek dan tur" : "Payment"}</p><p className="text-sm">{order.payment === "Cash On Delivery" ? "COD" : "UPI"}</p></div></div>
           <div className="flex justify-between font-black pt-3 border-t border-white/5"><span>{t("total", lang)}</span><span className="text-blue-400">{fmtPrice(order.total)}</span></div>
         </div>
       </div>
@@ -2429,7 +2462,11 @@ function AdminProductsTab({
       badge: editingProduct ? editingProduct.badge : "New",
     };
 
-    await onProductSave(p);
+    try {
+      await onProductSave(p);
+    } catch {
+      return; // error alert already shown; keep the form open
+    }
     setShowAdd(false);
     setEditingProduct(null);
   };
@@ -3063,47 +3100,61 @@ function AdminContentTab({
   const [newCouponPct, setNewCouponPct] = useState("");
   const [newCouponDesc, setNewCouponDesc] = useState("");
 
+  // onContentSave shows an error alert and throws when Supabase fails, so
+  // each handler only keeps its change after a real save.
   const handleSaveShopInfo = async () => {
     setSaving(true);
-    await onContentSave("shop_info", {
-      name: shopName,
-      subName: shopSub,
-      description: shopDesc,
-      phone: shopPhone,
-      location: shopLoc,
-      instagram: shopInsta,
-      upiId: shopUpiId,
-    });
-    setSaving(false);
-    setEditingKey(null);
+    try {
+      await onContentSave("shop_info", {
+        ...(shopInfo || {}),
+        name: shopName,
+        subName: shopSub,
+        description: shopDesc,
+        phone: shopPhone,
+        location: shopLoc,
+        instagram: shopInsta,
+        upiId: shopUpiId,
+      });
+      setEditingKey(null);
+    } catch { /* alert already shown */ } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddBanner = async () => {
     if (!newBannerTitle) return;
     const updated = [...localBanners, { title: newBannerTitle, sub: newBannerSub, img: newBannerImg || "1592750475338-74b7b21085ab" }];
-    setLocalBanners(updated);
-    await onContentSave("banners", updated);
-    setNewBannerTitle(""); setNewBannerSub(""); setNewBannerImg("");
+    try {
+      await onContentSave("banners", updated);
+      setLocalBanners(updated);
+      setNewBannerTitle(""); setNewBannerSub(""); setNewBannerImg("");
+    } catch { /* alert already shown */ }
   };
 
   const handleRemoveBanner = async (idx: number) => {
     const updated = localBanners.filter((_, i) => i !== idx);
-    setLocalBanners(updated);
-    await onContentSave("banners", updated);
+    try {
+      await onContentSave("banners", updated);
+      setLocalBanners(updated);
+    } catch { /* alert already shown */ }
   };
 
   const handleAddCoupon = async () => {
     if (!newCouponCode || !newCouponPct) return;
     const updated = [...localCoupons, { code: newCouponCode.toUpperCase(), discountPercent: Number(newCouponPct), description: newCouponDesc || `${newCouponPct}% off entire order` }];
-    setLocalCoupons(updated);
-    await onContentSave("coupons", updated);
-    setNewCouponCode(""); setNewCouponPct(""); setNewCouponDesc("");
+    try {
+      await onContentSave("coupons", updated);
+      setLocalCoupons(updated);
+      setNewCouponCode(""); setNewCouponPct(""); setNewCouponDesc("");
+    } catch { /* alert already shown */ }
   };
 
   const handleRemoveCoupon = async (idx: number) => {
     const updated = localCoupons.filter((_, i) => i !== idx);
-    setLocalCoupons(updated);
-    await onContentSave("coupons", updated);
+    try {
+      await onContentSave("coupons", updated);
+      setLocalCoupons(updated);
+    } catch { /* alert already shown */ }
   };
 
   return (
@@ -3225,30 +3276,35 @@ function AdminPaymentsTab({
   const [enableUpi, setEnableUpi] = useState<boolean>(paymentSettings?.enableUpi !== false);
   const [enableCod, setEnableCod] = useState<boolean>(paymentSettings?.enableCod !== false);
   const [shippingFee, setShippingFee] = useState<string>(String(paymentSettings?.shippingFee ?? 9.99));
+  const [freeShippingAbove, setFreeShippingAbove] = useState<string>(String(paymentSettings?.freeShippingAbove ?? 0));
   const [upiId, setUpiId] = useState<string>(shopInfo?.upiId || "9612217093@paytm");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
-    // Save payment settings
-    await onContentSave("payment_settings", {
-      enableUpi,
-      enableCod,
-      shippingFee: Number(shippingFee) || 0,
-    });
-    // Save UPI ID back to shop_info
-    await onContentSave("shop_info", {
-      ...(shopInfo || {}),
-      upiId,
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      // Save payment settings
+      await onContentSave("payment_settings", {
+        ...(paymentSettings || {}),
+        enableUpi,
+        enableCod,
+        shippingFee: Math.max(0, Number(shippingFee) || 0),
+        freeShippingAbove: Math.max(0, Number(freeShippingAbove) || 0),
+      });
+      // Save UPI ID back to shop_info
+      await onContentSave("shop_info", {
+        ...(shopInfo || {}),
+        upiId,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch { /* alert already shown */ } finally {
+      setSaving(false);
+    }
   };
 
   const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(shopInfo?.name || "Alpha Mobile")}&am=0&cu=INR`;
-  const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiUri)}&size=200`;
 
   return (
     <div className="mt-2 text-foreground text-left space-y-4">
@@ -3350,7 +3406,7 @@ function AdminPaymentsTab({
           </div>
           <div>
             <p className="font-bold text-sm">Shipping Fee</p>
-            <p className="text-muted-foreground text-xs">Charged when order total &lt; ₹100</p>
+            <p className="text-muted-foreground text-xs">Charged on every order unless free shipping applies</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -3366,6 +3422,19 @@ function AdminPaymentsTab({
           <span className="text-muted-foreground text-xs font-semibold">per order</span>
         </div>
         <p className="text-muted-foreground/30 text-[10px]">Set to 0 for always-free shipping.</p>
+        <div className="flex items-center gap-3 pt-1">
+          <span className="text-muted-foreground text-xs font-semibold whitespace-nowrap">Free above ₹</span>
+          <input
+            type="number"
+            value={freeShippingAbove}
+            onChange={e => setFreeShippingAbove(e.target.value)}
+            className="flex-1 glass-input rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-blue-500"
+            min="0"
+            step="1"
+          />
+          <span className="text-muted-foreground text-xs font-semibold">subtotal</span>
+        </div>
+        <p className="text-muted-foreground/30 text-[10px]">Orders with a subtotal above this amount ship free. 0 = disabled.</p>
       </div>
 
       {/* Status preview */}
@@ -3638,10 +3707,11 @@ export default function App() {
     localStorage.setItem("e_commerce_language", lang);
   };
 
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
-    const cached = localStorage.getItem("e_commerce_notifications");
-    return cached ? JSON.parse(cached) : [];
-  });
+  // Notifications arrive through Supabase Realtime (see the orders channel
+  // below). The list is only cached per signed-in user on this device so the
+  // drawer remembers what was already received/read.
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
 
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type: "admin" | "customer" } | null>(null);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
@@ -3664,6 +3734,18 @@ export default function App() {
     return () => window.removeEventListener("open-footer-modal", handleOpenModal);
   }, []);
 
+  // Every change is cached for the signed-in user only (key per user id).
+  const updateNotifications = (fn: (prev: AppNotification[]) => AppNotification[]) => {
+    setNotifications(prev => {
+      const updated = fn(prev);
+      const uid = notifUidRef.current;
+      if (uid) {
+        try { localStorage.setItem(`e_commerce_notifications_${uid}`, JSON.stringify(updated.slice(0, 100))); } catch { /* ignore */ }
+      }
+      return updated;
+    });
+  };
+
   const addNotification = (title: string, message: string, type: "admin" | "customer", orderId: string, customerEmail?: string) => {
     const newNotif: AppNotification = {
       id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -3675,9 +3757,8 @@ export default function App() {
       orderId,
       customerEmail,
     };
-    setNotifications(prev => {
+    updateNotifications(prev => {
       const updated = [newNotif, ...prev];
-      localStorage.setItem("e_commerce_notifications", JSON.stringify(updated));
       return updated;
     });
     setActiveToast({ id: newNotif.id, title, message, type });
@@ -3800,15 +3881,14 @@ export default function App() {
   ).length;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => {
+    updateNotifications(prev => {
       const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-      localStorage.setItem("e_commerce_notifications", JSON.stringify(updated));
       return updated;
     });
   };
 
   const markAllAsRead = (type: "admin" | "customer") => {
-    setNotifications(prev => {
+    updateNotifications(prev => {
       const updated = prev.map(n => {
         if (n.type === type) {
           if (type === "customer" && n.customerEmail !== currentUser?.email) {
@@ -3818,13 +3898,12 @@ export default function App() {
         }
         return n;
       });
-      localStorage.setItem("e_commerce_notifications", JSON.stringify(updated));
       return updated;
     });
   };
 
   const clearNotifications = (type: "admin" | "customer") => {
-    setNotifications(prev => {
+    updateNotifications(prev => {
       const updated = prev.filter(n => {
         if (n.type === type) {
           if (type === "customer" && n.customerEmail !== currentUser?.email) {
@@ -3834,7 +3913,6 @@ export default function App() {
         }
         return true;
       });
-      localStorage.setItem("e_commerce_notifications", JSON.stringify(updated));
       return updated;
     });
   };
@@ -3921,6 +3999,86 @@ export default function App() {
     return () => { cancelled = true; };
   }, [adminLoggedIn]);
 
+  // ── NOTIFICATIONS via Supabase Realtime ──
+  // Refs so the long-lived realtime callbacks always see current values.
+  const notifUidRef = useRef<string | undefined>(undefined);
+  const ordersRef = useRef<Order[]>([]);
+  ordersRef.current = orders;
+  const profilesRef = useRef<Profile[]>([]);
+  profilesRef.current = profiles;
+  const languageRef = useRef(language);
+  languageRef.current = language;
+  const currentUserRef = useRef<Profile | null>(null);
+  currentUserRef.current = currentUser;
+
+  // Load this user's cached notification list (old shared cache is removed).
+  useEffect(() => {
+    try { localStorage.removeItem("e_commerce_notifications"); } catch { /* ignore */ }
+    notifUidRef.current = sessionUserId;
+    if (!sessionUserId) { setNotifications([]); return; }
+    try {
+      const cached = localStorage.getItem(`e_commerce_notifications_${sessionUserId}`);
+      setNotifications(cached ? JSON.parse(cached) : []);
+    } catch {
+      setNotifications([]);
+    }
+  }, [sessionUserId]);
+
+  useEffect(() => {
+    if (!sessionUserId) return;
+    const channel = supabase.channel(`orders-${sessionUserId}-${adminLoggedIn ? "admin" : "customer"}`);
+
+    if (adminLoggedIn) {
+      // New order from any customer → shows up on the admin's device.
+      channel.on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload: any) => {
+        const o = mapDbOrder(payload.new);
+        setAdminOrders(prev => (prev.some(x => x.id === o.id) ? prev : [o, ...prev]));
+        const lang = languageRef.current;
+        const email = profilesRef.current.find(p => p.id === o.customer_id)?.email;
+        addNotification(
+          lang === "mz" ? "Order thar a awm e! 📦" : "New Order Received! 📦",
+          lang === "mz"
+            ? `Order thar ${o.id} siam a ni, a vaiin ${fmtPrice(o.total)}`
+            : `New order ${o.id} has been placed for ${fmtPrice(o.total)}`,
+          "admin",
+          o.id,
+          email || o.customerName || undefined
+        );
+      });
+      channel.on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (payload: any) => {
+        const o = mapDbOrder(payload.new);
+        setAdminOrders(prev => prev.map(x => (x.id === o.id ? o : x)));
+      });
+    }
+
+    // The customer's own orders (RLS also limits what realtime sends).
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders", filter: `customer_id=eq.${sessionUserId}` },
+      (payload: any) => {
+        if (payload.eventType === "DELETE") return;
+        const o = mapDbOrder(payload.new);
+        const before = ordersRef.current.find(x => x.id === o.id);
+        setOrders(prev => (prev.some(x => x.id === o.id) ? prev.map(x => (x.id === o.id ? o : x)) : [o, ...prev]));
+        if (payload.eventType === "UPDATE" && before && before.status !== o.status) {
+          const lang = languageRef.current;
+          addNotification(
+            lang === "mz" ? "Order Dinhmun Thlak A Ni 📦" : "Order Status Updated 📦",
+            lang === "mz"
+              ? `I order ${o.id} dinhmun chu '${getStatusLabel(o.status, "mz")}' ah thlak a ni e.`
+              : `Your order ${o.id} status has been updated to '${getStatusLabel(o.status, "en")}'.`,
+            "customer",
+            o.id,
+            currentUserRef.current?.email || undefined
+          );
+        }
+      }
+    );
+
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [sessionUserId, adminLoggedIn]);
+
   // Customers list for the admin panel (profiles + order totals).
   const customers: Customer[] = profiles.map(p => {
     const own = adminOrders.filter(o => o.customer_id === p.id && o.status !== "cancelled");
@@ -3973,6 +4131,12 @@ export default function App() {
       return;
     }
 
+    // What the customer saw (and paid by UPI). place_order() recalculates
+    // everything from the DB and refuses the order if this doesn't match.
+    const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
+    const coupon = findCoupon(coupons, couponCode);
+    const expectedTotal = round2(subtotal - couponDiscount(subtotal, coupon) + calcShipping(subtotal, paymentSettings));
+
     let screenshotPath: string | undefined;
     let newOrder: Order;
     try {
@@ -3991,15 +4155,31 @@ export default function App() {
         customerPhone: phone,
         utr,
         screenshotPath,
+        couponCode: coupon ? coupon.code : undefined,
+        expectedTotal,
       });
     } catch (err: any) {
       if (screenshotPath) supabaseService.removePaymentProof(screenshotPath).catch(() => {});
-      alert(friendlyError(err, language));
-      // Refresh stock so the customer sees what is really available.
-      supabaseService.getProducts().then(setProducts).catch(() => {});
+      const msg: string = err?.message || "";
+      if (msg === "invalid_coupon") setCouponCode(null);
+      alert(msg === "price_changed"
+        ? (language === "mz"
+            ? "Man emaw thawn man a danglam tawh. I cart en leh la, a man thar hi pay rawh."
+            : "Prices or shipping have changed. Please review your cart and the new total before paying.")
+        : friendlyError(err, language));
+      // Refresh products/settings so the customer sees real prices and stock.
+      Promise.all([
+        supabaseService.getProducts(),
+        supabaseService.getContentSettings("coupons", []),
+        supabaseService.getContentSettings("payment_settings", paymentSettings),
+      ]).then(([fresh, dbCoupons, dbPaymentSettings]) => {
+        setProducts(fresh);
+        setCoupons(dbCoupons);
+        setPaymentSettings(dbPaymentSettings);
+        setCart(prev => prev.map(i => ({ ...i, product: fresh.find(p => p.id === i.product.id) || i.product })));
+      }).catch(() => {});
       return;
     }
-    const newOrderId = newOrder.id;
 
     setOrders(prev => [newOrder, ...prev.filter(o => o.id !== newOrder.id)]);
     setProducts(prev =>
@@ -4009,22 +4189,13 @@ export default function App() {
       })
     );
 
-    // Dispatch admin notification
-    addNotification(
-      language === "mz" ? "Order thar a awm e! 📦" : "New Order Received! 📦",
-      language === "mz" 
-        ? `Order thar ${newOrderId} siam a ni, a vaiin ${fmtPrice(newOrder.total)}` 
-        : `New order ${newOrderId} has been placed for ${fmtPrice(newOrder.total)}`,
-      "admin",
-      newOrderId,
-      currentUser?.email || undefined
-    );
-
+    // The admin is notified through Supabase Realtime (see the effect above).
     setCart([]);
+    setCouponCode(null);
     navigate("/order-success");
   };
 
-  // ADMIN PRODUCTS SAVING
+  // ADMIN PRODUCTS SAVING (throws on failure so the form stays open)
   const handleProductSave = async (p: Product) => {
     try {
       const savedProd = await supabaseService.saveProduct(p);
@@ -4036,17 +4207,9 @@ export default function App() {
           return [savedProd, ...prev];
         }
       });
-    } catch (err) {
-      console.error("Error saving product to Supabase, updating local state only:", err);
-      // Update local state directly so the admin form functions offline
-      setProducts(prev => {
-        const idx = prev.findIndex(x => x.id === p.id);
-        if (idx >= 0) {
-          return prev.map(x => x.id === p.id ? p : x);
-        } else {
-          return [p, ...prev];
-        }
-      });
+    } catch (err: any) {
+      alert("Could not save product: " + (err?.message || "unknown error"));
+      throw err;
     }
   };
 
@@ -4054,78 +4217,48 @@ export default function App() {
   const handleProductDelete = async (id: string) => {
     try {
       await supabaseService.deleteProduct(id);
-    } catch (err) {
-      console.error("Error deleting product from Supabase, updating local state only:", err);
+    } catch (err: any) {
+      alert("Could not delete product: " + (err?.message || "unknown error"));
+      return;
     }
-    // Update local state directly
     setProducts(prev => prev.filter(x => x.id !== id));
   };
 
-  // ADMIN ORDER STATUS UPDATE
+  // ADMIN ORDER STATUS UPDATE (customer is notified through Realtime)
   const handleOrderStatusUpdate = async (id: string, status: Order["status"], tracking?: string) => {
     try {
       await supabaseService.updateOrderStatus(id, status, tracking);
-    } catch (err) {
-      console.error("Error updating order status in Supabase, updating local state only:", err);
+    } catch (err: any) {
+      alert("Could not update order status: " + (err?.message || "unknown error"));
+      return;
     }
-    // Update local state directly
     setAdminOrders(prev =>
       prev.map(o => (o.id === id ? { ...o, status, tracking: tracking || o.tracking } : o))
     );
-
-    // Get associated customer email to notify
-    const order = adminOrders.find(o => o.id === id);
-    let targetEmail: string | undefined = undefined;
-    if (order && order.customer_id) {
-      const cust = customers.find(c => c.id === order.customer_id);
-      if (cust) {
-        targetEmail = cust.email;
-      }
-    }
-
-    const getStatusLabel = (s: Order["status"], l: "en" | "mz") => {
-      const labels: Record<string, { en: string; mz: string }> = {
-        pending:          { en: "Pending Confirmation",   mz: "Nemngheh nghah mek"       },
-        confirmed:        { en: "Confirmed",               mz: "Pawm a ni ta"             },
-        processing:       { en: "Processing",              mz: "Tih mek a ni"             },
-        shipped:          { en: "Shipped",                 mz: "Thawn chhuah a ni ta"     },
-        "out-for-delivery": { en: "Out For Delivery",     mz: "A hlawhchhuah mek a ni"   },
-        delivered:        { en: "Delivered",               mz: "Thleng tawh a ni"         },
-        cancelled:        { en: "Cancelled",               mz: "Sut leh a ni ta"          },
-      };
-      return labels[s]?.[l] || s;
-    };
-
-    const statusLabelEn = getStatusLabel(status, "en");
-    const statusLabelMz = getStatusLabel(status, "mz");
-
-    addNotification(
-      language === "mz" ? "Order Dinhmun Thlak A Ni 📦" : "Order Status Updated 📦",
-      language === "mz" 
-        ? `I order ${id} dinhmun chu '${statusLabelMz}' ah thlak a ni e.` 
-        : `Your order ${id} status has been updated to '${statusLabelEn}'.`,
-      "customer",
-      id,
-      targetEmail
-    );
   };
 
-  // ADMIN CONTENT SETTINGS UPDATING
+  // ADMIN CONTENT SETTINGS UPDATING (alerts + throws on failure)
   const handleContentSave = async (key: string, value: any) => {
     try {
       await supabaseService.saveContentSettings(key, value);
-    } catch (err) {
-      console.error("Error updating content in Supabase, updating local state only:", err);
+    } catch (err: any) {
+      alert("Could not save settings: " + (err?.message || "unknown error"));
+      throw err;
     }
-    // Update local state directly
     if (key === "shop_info") setShopInfo(value);
     if (key === "banners") setBanners(value);
     if (key === "coupons") setCoupons(value);
     if (key === "payment_settings") setPaymentSettings(value);
   };
 
-  // ADMIN PAYMENT STATUS UPDATE (local only)
-  const handlePaymentStatusUpdate = (orderId: string, paymentStatus: Order["paymentStatus"]) => {
+  // ADMIN PAYMENT STATUS UPDATE (saved to the DB)
+  const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: Order["paymentStatus"]) => {
+    try {
+      await supabaseService.updatePaymentStatus(orderId, paymentStatus);
+    } catch (err: any) {
+      alert("Could not update payment status: " + (err?.message || "unknown error"));
+      return;
+    }
     setAdminOrders(prev =>
       prev.map(o => (o.id === orderId ? { ...o, paymentStatus } : o))
     );
@@ -4395,6 +4528,9 @@ export default function App() {
                     onCheckout={() => navigate(currentUser ? "/checkout" : "/auth")}
                     onBack={() => navigate(-1 as any)}
                     coupons={coupons}
+                    paymentSettings={paymentSettings}
+                    appliedCouponCode={couponCode}
+                    onApplyCoupon={setCouponCode}
                     lang={language}
                   />
                 } />
@@ -4416,6 +4552,8 @@ export default function App() {
                       cart={cart}
                       shopInfo={shopInfo}
                       paymentSettings={paymentSettings}
+                      coupons={coupons}
+                      couponCode={couponCode}
                       currentUser={currentUser}
                       onBack={() => navigate("/cart")}
                       onSuccess={handleCheckoutSuccess}
@@ -4702,10 +4840,6 @@ export default function App() {
                           key={n.id}
                           onClick={() => {
                             markAsRead(n.id);
-                            const ord = orders.find(o => o.id === n.orderId);
-                            if (ord) {
-                              setSelectedOrder(ord);
-                            }
                             setIsAdminNotifDrawerOpen(false);
                           }}
                           className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative group flex gap-3 ${

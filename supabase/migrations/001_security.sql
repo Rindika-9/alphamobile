@@ -308,7 +308,13 @@ create policy payment_proofs_delete_own_or_admin on storage.objects for delete t
 -- ─── place_order() ──────────────────────────────────────────────────────────
 -- p_items: [{"product_id": "p-123", "qty": 1}, ...]
 -- Prices, coupon discount, shipping and total are all computed here from the
--- database. Anything price-like sent by the client is ignored.
+-- database. Prices sent by the client are never used. p_expected_total is the
+-- total the customer saw (and may already have paid by UPI): if the real
+-- total is different, the order is refused with 'price_changed' so the
+-- customer can review it, instead of saving an amount they didn't pay.
+
+drop function if exists public.place_order(jsonb, text, text, text, text, text, text, text);
+drop function if exists public.place_order(jsonb, text, text, text, text, text, text, text, numeric);
 
 create or replace function public.place_order(
   p_items jsonb,
@@ -318,7 +324,8 @@ create or replace function public.place_order(
   p_customer_phone text,
   p_utr text default null,
   p_screenshot_path text default null,
-  p_coupon_code text default null
+  p_coupon_code text default null,
+  p_expected_total numeric default null
 )
 returns public.orders
 language plpgsql
@@ -446,6 +453,10 @@ begin
 
   v_total := round(v_subtotal - v_discount + v_shipping, 2);
 
+  if p_expected_total is not null and abs(v_total - p_expected_total) > 0.01 then
+    raise exception 'price_changed';
+  end if;
+
   -- Unique order id
   loop
     v_id := 'ORD-' || to_char(now(), 'YYYY') || '-' || nextval('public.order_number_seq')::text;
@@ -468,8 +479,8 @@ begin
 end;
 $$;
 
-revoke execute on function public.place_order(jsonb, text, text, text, text, text, text, text) from public, anon;
-grant execute on function public.place_order(jsonb, text, text, text, text, text, text, text) to authenticated;
+revoke execute on function public.place_order(jsonb, text, text, text, text, text, text, text, numeric) from public, anon;
+grant execute on function public.place_order(jsonb, text, text, text, text, text, text, text, numeric) to authenticated;
 
 -- ─── delete_my_account() ────────────────────────────────────────────────────
 -- Deletes the caller's profile and auth user. Orders stay (customer_id is set
