@@ -72,3 +72,11 @@ jspm_packages/
 
 # Gemini / Antigravity agent temp files
 .gemini/
+
+# Secrets — never commit
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+android/key.properties

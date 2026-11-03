@@ -19,7 +19,9 @@ import {
 } from "recharts";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import shopLogo from "@/imports/image.png";
-import { supabaseService, Product, Order, Customer, CartItem } from "./services/supabaseService";
+import { supabaseService, Product, Order, Customer, CartItem, Profile } from "./services/supabaseService";
+import { supabase } from "./lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 import { QRCodeSVG } from "qrcode.react";
 
 
@@ -97,7 +99,12 @@ const TRANSLATIONS = {
     payingTo: "Payee UPI ID",
     amountToPay: "Amount to Pay",
     openUpiApp: "⚡ Open GPay / UPI App",
-    scanQrCode: "Scan QR code to pay or copy the UPI ID"
+    scanQrCode: "Scan QR code to pay or copy the UPI ID",
+    deleteAccount: "Delete My Account",
+    deleteAccountTitle: "Delete your account?",
+    deleteAccountDesc: "This permanently deletes your login, profile and payment screenshots. Orders you already placed stay in the shop's records (without your account) for accounting. This cannot be undone.",
+    deleteAccountConfirm: "Delete",
+    forgotPassword: "Forgot password?"
   },
   mz: {
     welcomeBack: "Chibai le",
@@ -148,7 +155,12 @@ const TRANSLATIONS = {
     payingTo: "Payee UPI ID",
     amountToPay: "Pek tur zat",
     openUpiApp: "⚡ Open GPay / UPI App",
-    scanQrCode: "QR code scan-in emaw a chunga UPI ID hi copy-in pay rawh"
+    scanQrCode: "QR code scan-in emaw a chunga UPI ID hi copy-in pay rawh",
+    deleteAccount: "Ka Account Paihna",
+    deleteAccountTitle: "I account paih dawn em?",
+    deleteAccountDesc: "I login, profile leh payment screenshot-te chu kumkhuain paih a ni ang. Order i siam tawhte chu dawr record-ah (i account tel lovin) chhinchhiah a la ni ang. Tihkir leh theih a ni lo.",
+    deleteAccountConfirm: "Paih rawh",
+    forgotPassword: "Password i theihnghilh em?"
   }
 };
 
@@ -166,6 +178,28 @@ const CHART_COLORS = ["#2563EB", "#0B1D3A", "#60A5FA", "#93C5FD", "#BFDBFE"];
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 
 const fmtPrice = (p: number) => `₹${p.toLocaleString()}`;
+
+/** Public website (used in auth e-mails and for /privacy, /delete-account). */
+const SITE_URL = ((import.meta.env.VITE_SITE_URL as string) || window.location.origin).replace(/\/$/, "");
+
+/** Customer-friendly text for errors raised by place_order() and auth. */
+function friendlyError(err: any, lang: "en" | "mz"): string {
+  const msg: string = err?.message || "";
+  const mz = lang === "mz";
+  if (msg.startsWith("out_of_stock:")) {
+    const name = msg.slice("out_of_stock:".length);
+    return mz ? `${name} hi a zawh tawh (stock a tawk lo).` : `Sorry, ${name} is out of stock.`;
+  }
+  if (msg.startsWith("product_not_found")) return mz ? "Product pakhat hi a awm tawh lo. I cart en leh rawh." : "A product in your cart is no longer available.";
+  if (msg === "invalid_coupon") return mz ? "❌ Coupon code a dik lo" : "❌ Invalid coupon code";
+  if (msg === "payment_method_disabled") return mz ? "He payment method hi hman theih a ni lo." : "This payment method is not available right now.";
+  if (msg === "invalid_utr") return mz ? "Khawngaihin UTR ID dik tak chhut rawh (a tlem berah digit 6)." : "Please enter a valid UTR transaction ID (at least 6 characters).";
+  if (msg === "invalid_screenshot") return mz ? "Khawngaihin payment screenshot upload rawh." : "Please upload a payment screenshot.";
+  if (msg === "missing_details") return mz ? "Khawngaihin hming, phone number, address, khua, leh pincode dah vek rawh." : "Please fill in all address details.";
+  if (msg === "not_authenticated") return mz ? "Khawngaihin lut leh rawh." : "Please log in again.";
+  if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("network")) return mz ? "Internet a tha lo. Ti nawn leh rawh." : "Network error. Please check your connection and try again.";
+  return (mz ? "Thil a dik lo: " : "Something went wrong: ") + (msg || "unknown error");
+}
 const calcDiscount = (orig: number, curr: number) => Math.round(((orig - curr) / orig) * 100);
 
 function Stars({ rating, size = 11 }: { rating: number; size?: number }) {
@@ -1218,8 +1252,8 @@ function CheckoutScreen({
     fullName: string,
     phone: string,
     utr?: string,
-    screenshot?: string
-  ) => void;
+    screenshotFile?: File
+  ) => Promise<void>;
   lang: "en" | "mz";
 }) {
   const enableUpi = paymentSettings?.enableUpi !== false;
@@ -1237,7 +1271,15 @@ function CheckoutScreen({
   const [stateZip, setStateZip] = useState(currentUser?.pincode || "");
 
   const [utr, setUtr] = useState("");
+  // Preview URL for the chosen file; the File itself is uploaded to the
+  // private `payment-proofs` bucket when the order is placed.
   const [screenshot, setScreenshot] = useState("");
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [placing, setPlacing] = useState(false);
+
+  useEffect(() => {
+    return () => { if (screenshot) URL.revokeObjectURL(screenshot); };
+  }, [screenshot]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1246,11 +1288,8 @@ function CheckoutScreen({
         alert(lang === "mz" ? "File hi 2MB aiin a lian tur a ni lo" : "File size must be less than 2MB");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setScreenshot(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setScreenshotFile(file);
+      setScreenshot(URL.createObjectURL(file));
     }
   };
 
@@ -1463,7 +1502,7 @@ function CheckoutScreen({
                           <img src={screenshot} alt="Payment Screenshot" className="max-w-full max-h-full object-contain" />
                           <button 
                             type="button" 
-                            onClick={() => setScreenshot("")} 
+                            onClick={() => { setScreenshot(""); setScreenshotFile(null); }}
                             className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
                           >
                             <X size={15} />
@@ -1506,8 +1545,10 @@ function CheckoutScreen({
       </div>
 
       <div className="bg-background/80 backdrop-blur-md border-t border-white/5 px-4 pb-6 pt-3 z-20 flex-shrink-0">
-        <button 
-          onClick={() => {
+        <button
+          disabled={placing}
+          onClick={async () => {
+            if (placing) return;
             if (step < 2) {
               if (step === 0) {
                 if (!fullName.trim() || !phone.trim() || !street.trim() || !city.trim() || !stateZip.trim()) {
@@ -1522,12 +1563,17 @@ function CheckoutScreen({
                   alert(lang === "mz" ? "Khawngaihin UTR ID dik tak chhut rawh (a tlem berah digit 6)." : "Please enter a valid UTR transaction ID (at least 6 characters).");
                   return;
                 }
-                if (!screenshot) {
+                if (!screenshotFile) {
                   alert(lang === "mz" ? "Khawngaihin payment screenshot upload rawh." : "Please upload a payment screenshot.");
                   return;
                 }
               }
-              onSuccess(payment, `${street}, ${city}, ${stateZip}`, fullName, phone, utr, screenshot);
+              setPlacing(true);
+              try {
+                await onSuccess(payment, `${street}, ${city}, ${stateZip}`, fullName, phone, utr, screenshotFile || undefined);
+              } finally {
+                setPlacing(false);
+              }
             }
           }} 
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all"
@@ -1713,11 +1759,13 @@ function SettingsScreen({
   onNavigateTab,
   deferredPrompt,
   onInstall,
+  onDeleteAccount,
 }: {
   currentUser: any;
   darkMode: boolean;
   onDarkMode: (v: boolean) => void;
   onLogout: () => void;
+  onDeleteAccount: () => Promise<void>;
   onOpenLogin: () => void;
   lang: "en" | "mz";
   setLang: (l: "en" | "mz") => void;
@@ -1736,6 +1784,8 @@ function SettingsScreen({
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const sections = [
     {
@@ -1803,12 +1853,18 @@ function SettingsScreen({
           onClick: () => setIsPrivacyOpen(true),
           right: <ChevronRight size={16} className="text-muted-foreground" /> 
         },
-        { 
-          icon: FileText, 
-          label: t("termsConditions", lang), 
+        {
+          icon: FileText,
+          label: t("termsConditions", lang),
           onClick: () => setIsTermsOpen(true),
-          right: <ChevronRight size={16} className="text-muted-foreground" /> 
+          right: <ChevronRight size={16} className="text-muted-foreground" />
         },
+        ...(currentUser ? [{
+          icon: Trash2,
+          label: t("deleteAccount", lang),
+          onClick: () => setIsDeleteOpen(true),
+          right: <ChevronRight size={16} className="text-muted-foreground" />
+        }] : []),
       ],
     },
     {
@@ -1933,6 +1989,38 @@ function SettingsScreen({
         </div>
       )}
 
+      {/* Delete Account Dialog */}
+      {isDeleteOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card rounded-3xl w-full max-w-xs p-6 shadow-2xl space-y-4 animate-scale-in text-left backdrop-blur-3xl">
+            <h3 className="font-black text-lg text-foreground">{t("deleteAccountTitle", lang)}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t("deleteAccountDesc", lang)}</p>
+            <div className="flex gap-2">
+              <button disabled={deleting} onClick={() => setIsDeleteOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground font-black py-2.5 rounded-xl transition-all text-xs">
+                {lang === "mz" ? "Sut lehna" : "Cancel"}
+              </button>
+              <button
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await onDeleteAccount();
+                    setIsDeleteOpen(false);
+                  } catch (err: any) {
+                    alert((lang === "mz" ? "Account paih a hlawhchham: " : "Could not delete account: ") + (err?.message || ""));
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                className="flex-1 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 font-black py-2.5 rounded-xl transition-all text-xs disabled:opacity-60"
+              >
+                {deleting ? "..." : t("deleteAccountConfirm", lang)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Change Password Dialog */}
       {isChangePwOpen && (
         <ChangePasswordModal 
@@ -1967,14 +2055,34 @@ function SettingsScreen({
 // ─── ADMIN LOGIN ──────────────────────────────────────────────────────────────
 
 function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: () => void }) {
-  const [email, setEmail] = useState("admin@gmail.com");
-  const [pw, setPw] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleLogin = () => {
-    if (email === "admin@gmail.com" && pw === "admin123") onLogin();
-    else setError("Invalid credentials. Try admin@gmail.com / admin123");
+  const handleLogin = async () => {
+    if (busy) return;
+    setError("");
+    if (!email.trim() || !pw) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await supabaseService.signIn(email.trim().toLowerCase(), pw);
+      const ok = await supabaseService.isAdmin();
+      if (!ok) {
+        await supabaseService.signOut();
+        setError("This account does not have admin access.");
+        return;
+      }
+      onLogin();
+    } catch (err: any) {
+      setError(err?.message === "Invalid login credentials" ? "Invalid credentials." : (err?.message || "Login failed."));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -2011,11 +2119,10 @@ function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: () => vo
               <p className="text-red-400 text-xs">{error}</p>
             </div>
           )}
-          <button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-500/10 mt-2">
+          <button onClick={handleLogin} disabled={busy} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-500/10 mt-2">
             Login to Dashboard
           </button>
         </div>
-        <p className="text-muted-foreground/30 text-[10px] mt-6 text-center">Hint: admin@gmail.com · admin123</p>
       </div>
     </div>
   );
@@ -2098,7 +2205,7 @@ function AdminDashboard({
       <div className="flex-1 overflow-y-auto px-4 pb-8" style={{ scrollbarWidth: "none" }}>
         {tab === "dashboard" && <AdminDashboardTab orders={orders} products={products} customers={customers} />}
         {tab === "products" && <AdminProductsTab products={products} onProductSave={onProductSave} onProductDelete={onProductDelete} />}
-        {tab === "orders" && <AdminOrdersTab orders={orders} onStatusUpdate={onOrderStatusUpdate} onPaymentStatusUpdate={onPaymentStatusUpdate} />}
+        {tab === "orders" && <AdminOrdersTab orders={orders} customers={customers} onStatusUpdate={onOrderStatusUpdate} onPaymentStatusUpdate={onPaymentStatusUpdate} />}
         {tab === "customers" && <AdminCustomersTab customers={customers} />}
         {tab === "analytics" && <AdminAnalyticsTab products={products} orders={orders} />}
         {tab === "content" && <AdminContentTab banners={banners} shopInfo={shopInfo} coupons={coupons} onContentSave={onContentSave} />}
@@ -2476,6 +2583,50 @@ function AdminProductsTab({
   );
 }
 
+/**
+ * Payment screenshot thumbnail for one order. The image is fetched only when
+ * the card scrolls into view: a signed URL for the private `payment-proofs`
+ * bucket, or the base64 kept in old orders.
+ */
+function PaymentProofLink({ order }: { order: Order }) {
+  const ref = useRef<HTMLAnchorElement | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { setVisible(true); io.disconnect(); }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    supabaseService.getPaymentProofUrl(order).then(u => { if (!cancelled) setUrl(u); });
+    return () => { cancelled = true; };
+  }, [visible, order.id, order.screenshotPath]);
+
+  return (
+    <a
+      ref={ref}
+      href={url || undefined}
+      target="_blank"
+      rel="noreferrer"
+      className="block relative group overflow-hidden rounded-lg border border-white/10 aspect-[4/3] max-h-36 bg-black/40"
+    >
+      {url && <img src={url} alt="Payment Receipt" className="w-full h-full object-contain group-hover:scale-105 transition-transform" />}
+      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-white text-[9px] font-black bg-black/60 px-2 py-1 rounded uppercase tracking-wider">Open Full Image</span>
+      </div>
+    </a>
+  );
+}
+
 function AdminOrdersTab({
   orders,
   customers,
@@ -2592,27 +2743,17 @@ function AdminOrdersTab({
                         </div>
                       </div>
 
-                      {o.payment === "UPI Payment" && (o.utr || o.screenshot) && (
+                      {o.payment === "UPI Payment" && (o.utr || o.screenshotPath || o.hasLegacyScreenshot) && (
                         <div className="glass-card bg-white/[0.02] border border-white/10 rounded-xl p-3 space-y-2">
                           <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Payment Proof (UPI)</p>
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="text-muted-foreground font-semibold">UTR ID (12-digit):</span>
                             <span className="font-mono font-black text-foreground bg-white/5 px-2 py-0.5 rounded tracking-wider">{o.utr || "N/A"}</span>
                           </div>
-                          {o.screenshot && (
+                          {(o.screenshotPath || o.hasLegacyScreenshot) && (
                             <div>
                               <p className="text-[9px] text-muted-foreground mb-1 font-semibold">Screenshot:</p>
-                              <a 
-                                href={o.screenshot} 
-                                target="_blank" 
-                                rel="noreferrer" 
-                                className="block relative group overflow-hidden rounded-lg border border-white/10 aspect-[4/3] max-h-36 bg-black/40"
-                              >
-                                <img src={o.screenshot} alt="Payment Receipt" className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <span className="text-white text-[9px] font-black bg-black/60 px-2 py-1 rounded uppercase tracking-wider">Open Full Image</span>
-                                </div>
-                              </a>
+                              <PaymentProofLink order={o} />
                             </div>
                           )}
                         </div>
@@ -3452,20 +3593,23 @@ function TabletSidebar({ active, onTab, cartCount, onLogoTap, darkMode, onDarkMo
 
 // ─── ROUTE GUARDS ─────────────────────────────────────────────────────────────
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const stored = localStorage.getItem("e_commerce_current_user");
-  const user = stored ? JSON.parse(stored) : null;
-  const location = useLocation();
-  if (!user) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
-  }
-  return <>{children}</>;
+function RouteSpinner() {
+  return <div className="flex-1 flex items-center justify-center"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>;
 }
 
-function AdminRoute({ children, isLoggedIn }: { children: React.ReactNode; isLoggedIn: boolean }) {
-  if (!isLoggedIn) {
-    return <Navigate to="/admin" replace />;
+/** Waits for the Supabase session (restored from storage) before deciding. */
+function ProtectedRoute({ children, authReady, hasSession, currentUser }: {
+  children: React.ReactNode;
+  authReady: boolean;
+  hasSession: boolean;
+  currentUser: any;
+}) {
+  const location = useLocation();
+  if (!authReady) return <RouteSpinner />;
+  if (!hasSession) {
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
+  if (!currentUser) return <RouteSpinner />;
   return <>{children}</>;
 }
 
@@ -3544,7 +3688,6 @@ export default function App() {
   const [logoTaps, setLogoTaps] = useState(0);
   const [showShopPhone, setShowShopPhone] = useState(false);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [darkMode] = useState(true);
   const setDarkMode = () => {};
 
@@ -3564,20 +3707,87 @@ export default function App() {
 
   const [shopInitCategory, setShopInitCategory] = useState<string | undefined>(undefined);
 
-  const [currentUser, setCurrentUser] = useState<any>(() => {
-    const cached = localStorage.getItem("e_commerce_current_user");
-    return cached ? JSON.parse(cached) : null;
-  });
+  // ── AUTH (Supabase session; survives refresh) ──
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const sessionUserId = session?.user?.id;
 
-  const handleAuthSuccess = (user: any) => {
-    setCurrentUser(user);
-    localStorage.setItem("e_commerce_current_user", JSON.stringify(user));
+  useEffect(() => {
+    // Old builds kept users + plain-text passwords in localStorage. Remove them.
+    try {
+      localStorage.removeItem("e_commerce_users");
+      localStorage.removeItem("e_commerce_current_user");
+    } catch { /* ignore */ }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (!data.session) setAuthReady(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      if (event === "PASSWORD_RECOVERY") setPasswordRecovery(true);
+      if (!s) setAuthReady(true);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // Load profile + admin role whenever the signed-in user changes.
+  useEffect(() => {
+    if (!sessionUserId || !session) {
+      setCurrentUser(null);
+      setAdminLoggedIn(false);
+      return;
+    }
+    let cancelled = false;
+    const u = session.user;
+    const meta: any = u.user_metadata || {};
+    const fallback: Profile = {
+      id: u.id,
+      name: meta.name || "",
+      email: u.email || "",
+      phone: meta.phone || "",
+      pincode: meta.pincode || "",
+      address: meta.address || "",
+      avatar: (meta.name || "").substring(0, 2).toUpperCase(),
+      joined: new Date(u.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    };
+    (async () => {
+      const [profile, isAdm] = await Promise.all([
+        supabaseService.getProfile(u.id, u.email || "").catch(() => null),
+        supabaseService.isAdmin(),
+      ]);
+      if (cancelled) return;
+      setCurrentUser(profile ? { ...profile, email: profile.email || fallback.email } : fallback);
+      setAdminLoggedIn(isAdm);
+      setAuthReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, [sessionUserId]);
+
+  const handleAuthSuccess = () => {
     navigate("/checkout");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabaseService.signOut();
+    } catch (err) {
+      console.error("Sign out failed:", err);
+    }
     setCurrentUser(null);
-    localStorage.removeItem("e_commerce_current_user");
+    setAdminLoggedIn(false);
+    navigate("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!currentUser) return;
+    await supabaseService.deleteMyAccount(currentUser.id);
+    setCurrentUser(null);
+    setAdminLoggedIn(false);
+    setOrders([]);
     navigate("/");
   };
 
@@ -3645,8 +3855,11 @@ export default function App() {
 
   // Supabase states
   const [products, setProducts] = useState<Product[]>([]);
+  // `orders` = the signed-in customer's own orders. `adminOrders` = every
+  // order, loaded only for admins.
   const [orders, setOrders] = useState<Order[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [adminOrders, setAdminOrders] = useState<Order[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [shopInfo, setShopInfo] = useState<any>(null);
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -3664,11 +3877,9 @@ export default function App() {
       try {
         setDbLoading(true);
         setDbError(null);
-        // Fetch all real data from Supabase
-        const [dbProds, dbOrds, dbCusts, dbBanners, dbShopInfo, dbCoupons, dbPaymentSettings] = await Promise.all([
+        // Public data only. Orders/customers are loaded per role below.
+        const [dbProds, dbBanners, dbShopInfo, dbCoupons, dbPaymentSettings] = await Promise.all([
           supabaseService.getProducts(),
-          supabaseService.getOrders(),
-          supabaseService.getCustomers(),
           supabaseService.getContentSettings("banners", []),
           supabaseService.getContentSettings("shop_info", null),
           supabaseService.getContentSettings("coupons", []),
@@ -3676,8 +3887,6 @@ export default function App() {
         ]);
 
         setProducts(dbProds);
-        setOrders(dbOrds);
-        setCustomers(dbCusts);
         setBanners(dbBanners);
         setShopInfo(dbShopInfo);
         setCoupons(dbCoupons);
@@ -3691,6 +3900,40 @@ export default function App() {
     }
     initDb();
   }, []);
+
+  // Customer: only their own orders.
+  useEffect(() => {
+    if (!sessionUserId) { setOrders([]); return; }
+    let cancelled = false;
+    supabaseService.getMyOrders(sessionUserId)
+      .then(o => { if (!cancelled) setOrders(o); })
+      .catch(err => console.error("Failed loading orders:", err));
+    return () => { cancelled = true; };
+  }, [sessionUserId]);
+
+  // Admin: all orders + customer profiles.
+  useEffect(() => {
+    if (!adminLoggedIn) { setAdminOrders([]); setProfiles([]); return; }
+    let cancelled = false;
+    Promise.all([supabaseService.getAllOrders(), supabaseService.getProfiles()])
+      .then(([o, p]) => { if (!cancelled) { setAdminOrders(o); setProfiles(p); } })
+      .catch(err => console.error("Failed loading admin data:", err));
+    return () => { cancelled = true; };
+  }, [adminLoggedIn]);
+
+  // Customers list for the admin panel (profiles + order totals).
+  const customers: Customer[] = profiles.map(p => {
+    const own = adminOrders.filter(o => o.customer_id === p.id && o.status !== "cancelled");
+    return {
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      orders: own.length,
+      spent: own.reduce((s, o) => s + o.total, 0),
+      joined: p.joined,
+      avatar: p.avatar,
+    };
+  });
 
   const handleLogoTap = () => {
     const next = logoTaps + 1;
@@ -3723,91 +3966,42 @@ export default function App() {
     fullName: string,
     phone: string,
     utr?: string,
-    screenshot?: string
+    screenshotFile?: File
   ) => {
-    const newOrderId = `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
-    const checkoutTotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0);
-    const shippingCost = checkoutTotal > 100 ? 0 : 9.99;
-    
-    const newOrder: Order = {
-      id: newOrderId,
-      date: new Date().toISOString(),
-      status: "pending",
-      items: cart,
-      total: checkoutTotal + shippingCost,
-      address: addressInfo,
-      payment: paymentMethod === "gpay" ? "UPI Payment" : "Cash On Delivery",
-      customer_id: currentUser?.id || undefined,
-      utr,
-      screenshot,
-      customerName: fullName,
-      customerPhone: phone,
-    };
-
-    try {
-      // 1. Create order in DB
-      await supabaseService.createOrder(newOrder);
-
-      // 2. Decrement stock in DB
-      for (const item of cart) {
-        const newStock = Math.max(0, item.product.stock - item.qty);
-        await supabaseService.updateProductStock(item.product.id, newStock);
-      }
-
-      // 3. Update customer info in DB and local state (only if user is logged in)
-      const customerEmail = currentUser?.email || "";
-      const customerName = currentUser?.name || "";
-      const existingCust = customers.find(c => c.email === customerEmail);
-      if (existingCust) {
-        const updatedCust: Customer = {
-          ...existingCust,
-          orders: existingCust.orders + 1,
-          spent: existingCust.spent + newOrder.total,
-        };
-        await supabaseService.saveCustomer(updatedCust);
-        setCustomers(prev => prev.map(c => c.email === customerEmail ? updatedCust : c));
-      } else {
-        const newCust: Customer = {
-          id: currentUser?.id || `c-${Date.now()}`,
-          name: customerName,
-          email: customerEmail,
-          orders: 1,
-          spent: newOrder.total,
-          joined: currentUser?.joined || new Date().toISOString().substring(0, 7),
-          avatar: currentUser?.avatar || customerName.substring(0, 2).toUpperCase(),
-        };
-        await supabaseService.saveCustomer(newCust);
-        setCustomers(prev => [newCust, ...prev]);
-      }
-    } catch (err) {
-      console.error("Error writing checkout transaction to Supabase, running local fallback:", err);
-      // Fallback local updates if DB failed
-      const customerEmail = currentUser?.email || "";
-      const customerName = currentUser?.name || "";
-      const existingCust = customers.find(c => c.email === customerEmail);
-      if (existingCust) {
-        const updatedCust: Customer = {
-          ...existingCust,
-          orders: existingCust.orders + 1,
-          spent: existingCust.spent + newOrder.total,
-        };
-        setCustomers(prev => prev.map(c => c.email === customerEmail ? updatedCust : c));
-      } else {
-        const newCust: Customer = {
-          id: currentUser?.id || `c-${Date.now()}`,
-          name: customerName,
-          email: customerEmail,
-          orders: 1,
-          spent: newOrder.total,
-          joined: currentUser?.joined || new Date().toISOString().substring(0, 7),
-          avatar: currentUser?.avatar || customerName.substring(0, 2).toUpperCase(),
-        };
-        setCustomers(prev => [newCust, ...prev]);
-      }
+    if (!currentUser) {
+      navigate("/auth");
+      return;
     }
 
-    // Local state updates always run to guarantee UI updates
-    setOrders(prev => [newOrder, ...prev]);
+    let screenshotPath: string | undefined;
+    let newOrder: Order;
+    try {
+      // 1. Upload the payment screenshot to the private bucket (path only is saved)
+      if (paymentMethod === "gpay" && screenshotFile) {
+        screenshotPath = await supabaseService.uploadPaymentProof(currentUser.id, screenshotFile);
+      }
+
+      // 2. Create the order in ONE DB transaction: stock check, prices from the
+      //    products table, coupon + shipping applied server-side, stock decremented.
+      newOrder = await supabaseService.placeOrder({
+        items: cart.map(i => ({ product_id: i.product.id, qty: i.qty })),
+        payment: paymentMethod === "gpay" ? "UPI Payment" : "Cash On Delivery",
+        address: addressInfo,
+        customerName: fullName,
+        customerPhone: phone,
+        utr,
+        screenshotPath,
+      });
+    } catch (err: any) {
+      if (screenshotPath) supabaseService.removePaymentProof(screenshotPath).catch(() => {});
+      alert(friendlyError(err, language));
+      // Refresh stock so the customer sees what is really available.
+      supabaseService.getProducts().then(setProducts).catch(() => {});
+      return;
+    }
+    const newOrderId = newOrder.id;
+
+    setOrders(prev => [newOrder, ...prev.filter(o => o.id !== newOrder.id)]);
     setProducts(prev =>
       prev.map(p => {
         const item = cart.find(i => i.product.id === p.id);
@@ -3875,12 +4069,12 @@ export default function App() {
       console.error("Error updating order status in Supabase, updating local state only:", err);
     }
     // Update local state directly
-    setOrders(prev =>
+    setAdminOrders(prev =>
       prev.map(o => (o.id === id ? { ...o, status, tracking: tracking || o.tracking } : o))
     );
 
     // Get associated customer email to notify
-    const order = orders.find(o => o.id === id);
+    const order = adminOrders.find(o => o.id === id);
     let targetEmail: string | undefined = undefined;
     if (order && order.customer_id) {
       const cust = customers.find(c => c.id === order.customer_id);
@@ -3932,7 +4126,7 @@ export default function App() {
 
   // ADMIN PAYMENT STATUS UPDATE (local only)
   const handlePaymentStatusUpdate = (orderId: string, paymentStatus: Order["paymentStatus"]) => {
-    setOrders(prev =>
+    setAdminOrders(prev =>
       prev.map(o => (o.id === orderId ? { ...o, paymentStatus } : o))
     );
   };
@@ -3965,6 +4159,7 @@ export default function App() {
     && location.pathname !== "/cart"
     && location.pathname !== "/checkout"
     && location.pathname !== "/order-success"
+    && location.pathname !== "/delete-account"
     && !location.pathname.match(/^\/orders\/.+/);
 
 
@@ -4216,7 +4411,7 @@ export default function App() {
 
                 {/* ── PROTECTED ROUTES ── */}
                 <Route path="/checkout" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute authReady={authReady} hasSession={!!session} currentUser={currentUser}>
                     <CheckoutScreen
                       cart={cart}
                       shopInfo={shopInfo}
@@ -4230,13 +4425,13 @@ export default function App() {
                 } />
 
                 <Route path="/order-success" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute authReady={authReady} hasSession={!!session} currentUser={currentUser}>
                     <OrderSuccess onContinue={() => navigate("/")} lang={language} />
                   </ProtectedRoute>
                 } />
 
                 <Route path="/orders" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute authReady={authReady} hasSession={!!session} currentUser={currentUser}>
                     <OrdersScreen
                       orders={orders}
                       onOrderSelect={o => navigate(`/orders/${o.id}`)}
@@ -4254,7 +4449,7 @@ export default function App() {
                     return <OrderDetail order={order} onBack={() => navigate("/orders")} lang={language} />;
                   }
                   return (
-                    <ProtectedRoute>
+                    <ProtectedRoute authReady={authReady} hasSession={!!session} currentUser={currentUser}>
                       <OrderDetailRoute />
                     </ProtectedRoute>
                   );
@@ -4274,21 +4469,26 @@ export default function App() {
                     onNavigateTab={handleTabChange}
                     deferredPrompt={deferredPrompt}
                     onInstall={handleInstallApp}
+                    onDeleteAccount={handleDeleteAccount}
                   />
                 } />
 
+                <Route path="/delete-account" element={<DeleteAccountPage lang={language} onBack={() => navigate("/")} />} />
+
                 {/* ── ADMIN ROUTES ── */}
                 <Route path="/admin" element={
-                  adminLoggedIn
+                  !authReady
+                    ? <RouteSpinner />
+                    : adminLoggedIn
                     ? <AdminDashboard
                         products={products}
-                        orders={orders}
+                        orders={adminOrders}
                         customers={customers}
                         banners={banners}
                         shopInfo={shopInfo}
                         coupons={coupons}
                         paymentSettings={paymentSettings}
-                        onLogout={() => { setAdminLoggedIn(false); navigate("/"); }}
+                        onLogout={handleLogout}
                         onProductSave={handleProductSave}
                         onProductDelete={handleProductDelete}
                         onOrderStatusUpdate={handleOrderStatusUpdate}
@@ -4561,6 +4761,10 @@ export default function App() {
           {showFooterPrivacy && <PrivacyPolicyModal onClose={() => setShowFooterPrivacy(false)} />}
           {showFooterTerms && <TermsModal onClose={() => setShowFooterTerms(false)} />}
           {showFooterFaq && <HelpCenterModal onClose={() => setShowFooterFaq(false)} />}
+          {/* Opened from the "reset password" e-mail link */}
+          {passwordRecovery && session && (
+            <ChangePasswordModal currentUser={currentUser} recovery onClose={() => setPasswordRecovery(false)} />
+          )}
         </div>
       </div>
     </>
@@ -4574,11 +4778,13 @@ function CustomerAuthScreen({
   onBack,
   lang
 }: {
-  onAuthSuccess: (user: any) => void;
+  onAuthSuccess: () => void;
   onBack: () => void;
   lang: "en" | "mz";
 }) {
   const [isRegister, setIsRegister] = useState(true);
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -4588,8 +4794,28 @@ function CustomerAuthScreen({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
 
-  const handleAuth = () => {
+  const handleForgotPassword = async () => {
     setError("");
+    setInfo("");
+    if (!email.trim() || !email.toLowerCase().endsWith("@gmail.com")) {
+      setError(lang === "mz" ? "Gmail address @gmail.com a ni tur a ni." : "Gmail address ending with @gmail.com is required.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await supabaseService.sendPasswordReset(email.toLowerCase().trim(), SITE_URL);
+      setInfo(lang === "mz" ? "Password thlak theihna link chu i Gmail-ah kan thawn e." : "We sent a password reset link to your Gmail.");
+    } catch (err: any) {
+      setError(friendlyError(err, lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAuth = async () => {
+    if (busy) return;
+    setError("");
+    setInfo("");
 
     // Validate email
     if (!email.trim() || !email.toLowerCase().endsWith("@gmail.com")) {
@@ -4597,8 +4823,9 @@ function CustomerAuthScreen({
       return;
     }
 
-    if (!password.trim() || password.length < 4) {
-      setError(lang === "mz" ? "Password chu character 4 aia tlem lo a ni tur a ni." : "Password must be at least 4 characters.");
+    // Supabase Auth requires at least 6 characters.
+    if (!password.trim() || password.length < 6) {
+      setError(lang === "mz" ? "Password chu character 6 aia tlem lo a ni tur a ni." : "Password must be at least 6 characters.");
       return;
     }
 
@@ -4612,39 +4839,61 @@ function CustomerAuthScreen({
         return;
       }
 
-      // Register new user locally
-      const newUser = {
-        id: `c-${Date.now()}`,
-        name,
-        email: email.toLowerCase().trim(),
-        password,
-        phone,
-        pincode,
-        address,
-        orders: 0,
-        spent: 0,
-        joined: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
-        avatar: name.substring(0, 2).toUpperCase(),
-      };
-
-      // Add to registered users list in localStorage
-      const users = JSON.parse(localStorage.getItem("e_commerce_users") || "[]");
-      if (users.find((u: any) => u.email === newUser.email)) {
-        setError(lang === "mz" ? "He email hmang hian account a awm tawh." : "User with this email already exists.");
-        return;
+      // Register with Supabase Auth. Profile fields go in user metadata; a DB
+      // trigger copies them into `profiles`. No password is stored by us.
+      setBusy(true);
+      try {
+        const data = await supabaseService.signUp({
+          email: email.toLowerCase().trim(),
+          password,
+          name: name.trim(),
+          phone: phone.trim(),
+          pincode: pincode.trim(),
+          address: address.trim(),
+          redirectTo: SITE_URL,
+        });
+        // With "Confirm email" on, an existing address comes back with no identities.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          setError(lang === "mz" ? "He email hmang hian account a awm tawh." : "User with this email already exists.");
+          return;
+        }
+        if (data.session) {
+          onAuthSuccess();
+        } else {
+          setIsRegister(false);
+          setPassword("");
+          setInfo(lang === "mz"
+            ? "I Gmail-ah confirm link kan thawn e. Confirm la, lut leh rawh."
+            : "We sent a confirmation link to your Gmail. Confirm it, then log in.");
+        }
+      } catch (err: any) {
+        const msg = (err?.message || "").toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already exists")) {
+          setError(lang === "mz" ? "He email hmang hian account a awm tawh." : "User with this email already exists.");
+        } else {
+          setError(friendlyError(err, lang));
+        }
+      } finally {
+        setBusy(false);
       }
-      users.push(newUser);
-      localStorage.setItem("e_commerce_users", JSON.stringify(users));
-      onAuthSuccess(newUser);
     } else {
       // Login
-      const users = JSON.parse(localStorage.getItem("e_commerce_users") || "[]");
-      const user = users.find((u: any) => u.email === email.toLowerCase().trim() && u.password === password);
-      if (!user) {
-        setError(lang === "mz" ? "Email emaw password a dik lo." : "Invalid email or password.");
-        return;
+      setBusy(true);
+      try {
+        await supabaseService.signIn(email.toLowerCase().trim(), password);
+        onAuthSuccess();
+      } catch (err: any) {
+        const msg = (err?.message || "").toLowerCase();
+        if (msg.includes("email not confirmed")) {
+          setError(lang === "mz" ? "I Gmail-a confirm link hmang hian confirm phawt rawh." : "Please confirm your email first (check your Gmail).");
+        } else if (msg.includes("invalid login credentials")) {
+          setError(lang === "mz" ? "Email emaw password a dik lo." : "Invalid email or password.");
+        } else {
+          setError(friendlyError(err, lang));
+        }
+      } finally {
+        setBusy(false);
       }
-      onAuthSuccess(user);
     }
   };
 
@@ -4673,6 +4922,13 @@ function CustomerAuthScreen({
             </div>
           )}
 
+          {info && (
+            <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/25 rounded-xl px-4 py-3 text-green-500 text-xs">
+              <CheckCircle size={14} className="flex-shrink-0" />
+              <span>{info}</span>
+            </div>
+          )}
+
           {isRegister && (
             <div>
               <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1.5 block">{lang === "mz" ? "Hming Pum" : "Full Name"}</label>
@@ -4687,7 +4943,14 @@ function CustomerAuthScreen({
 
           <div>
             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1.5 block">Password</label>
-            <input type="password" placeholder="••••" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+            <input type="password" placeholder="••••••" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-accent transition-colors shadow-sm" />
+            {!isRegister && (
+              <div className="text-right pt-1.5">
+                <button type="button" disabled={busy} onClick={handleForgotPassword} className="text-xs text-primary font-bold hover:underline">
+                  {t("forgotPassword", lang)}
+                </button>
+              </div>
+            )}
           </div>
 
           {isRegister && (
@@ -4737,12 +5000,12 @@ function CustomerAuthScreen({
             </>
           )}
 
-          <button onClick={handleAuth} className="w-full bg-primary text-white font-black py-3.5 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
+          <button onClick={handleAuth} disabled={busy} className="w-full bg-primary text-white font-black py-3.5 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
             {isRegister ? (lang === "mz" ? "Siam la, kal zel rawh" : "Register & Continue") : (lang === "mz" ? "Lut la, kal zel rawh" : "Log In & Continue")}
           </button>
 
           <div className="text-center pt-2">
-            <button onClick={() => { setIsRegister(!isRegister); setError(""); }} className="text-xs text-primary font-bold hover:underline">
+            <button onClick={() => { setIsRegister(!isRegister); setError(""); setInfo(""); }} className="text-xs text-primary font-bold hover:underline">
               {isRegister ? (lang === "mz" ? "Account i nei tawh em? Lut rawh" : "Already have an account? Log In") : (lang === "mz" ? "Alpha Mobile-ah i thar em? Account siam rawh" : "New to Alpha Mobile? Register")}
             </button>
           </div>
@@ -4754,22 +5017,20 @@ function CustomerAuthScreen({
 
 // ─── SETTINGS MODALS ──────────────────────────────────────────────────────────
 
-function ChangePasswordModal({ currentUser, onClose }: { currentUser: any; onClose: () => void }) {
+function ChangePasswordModal({ currentUser, onClose, recovery = false }: { currentUser: any; onClose: () => void; recovery?: boolean }) {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (busy) return;
     setError("");
     setSuccess("");
-    if (currentPw !== currentUser.password) {
-      setError("Current password is incorrect.");
-      return;
-    }
-    if (newPw.length < 4) {
-      setError("New password must be at least 4 characters.");
+    if (newPw.length < 6) {
+      setError("New password must be at least 6 characters.");
       return;
     }
     if (newPw !== confirmPw) {
@@ -4777,17 +5038,25 @@ function ChangePasswordModal({ currentUser, onClose }: { currentUser: any; onClo
       return;
     }
 
-    // Update locally stored user password
-    const users = JSON.parse(localStorage.getItem("e_commerce_users") || "[]");
-    const updated = users.map((u: any) => u.email === currentUser.email ? { ...u, password: newPw } : u);
-    localStorage.setItem("e_commerce_users", JSON.stringify(updated));
-
-    // Update session
-    const updatedSession = { ...currentUser, password: newPw };
-    localStorage.setItem("e_commerce_current_user", JSON.stringify(updatedSession));
-    
-    setSuccess("Password updated successfully!");
-    setTimeout(onClose, 1500);
+    setBusy(true);
+    try {
+      // Re-check the current password (not needed when coming from a reset e-mail).
+      if (!recovery) {
+        try {
+          await supabaseService.signIn(currentUser.email, currentPw);
+        } catch {
+          setError("Current password is incorrect.");
+          return;
+        }
+      }
+      await supabaseService.updatePassword(newPw);
+      setSuccess("Password updated successfully!");
+      setTimeout(onClose, 1500);
+    } catch (err: any) {
+      setError(err?.message || "Could not update password.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -4797,10 +5066,12 @@ function ChangePasswordModal({ currentUser, onClose }: { currentUser: any; onClo
         {error && <p className="text-xs text-red-500 font-bold bg-red-500/10 p-2 rounded-lg">{error}</p>}
         {success && <p className="text-xs text-green-600 font-bold bg-green-500/10 p-2 rounded-lg">{success}</p>}
         <div className="space-y-3">
+          {!recovery && (
           <div>
             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider block mb-1">Current Password</label>
             <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs outline-none focus:border-accent" />
           </div>
+          )}
           <div>
             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider block mb-1">New Password</label>
             <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs outline-none focus:border-accent" />
@@ -4812,7 +5083,7 @@ function ChangePasswordModal({ currentUser, onClose }: { currentUser: any; onClo
         </div>
         <div className="flex gap-2 pt-2">
           <button onClick={onClose} className="flex-1 bg-secondary text-foreground text-xs font-black py-2.5 rounded-xl border border-border">Cancel</button>
-          <button onClick={handleSubmit} className="flex-1 bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">Update</button>
+          <button onClick={handleSubmit} disabled={busy} className="flex-1 bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">Update</button>
         </div>
       </div>
     </div>
@@ -5008,6 +5279,66 @@ function PrivacyPolicyModal({ onClose }: { onClose: () => void }) {
         <button onClick={onClose} className="w-full bg-primary text-white text-xs font-black py-2.5 rounded-xl shadow-md">
           Close
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── PUBLIC PAGE: /delete-account (Google Play account-deletion URL) ──────────
+
+function DeleteAccountPage({ lang, onBack }: { lang: "en" | "mz"; onBack: () => void }) {
+  const mz = lang === "mz";
+  return (
+    <div className="flex-grow flex flex-col overflow-hidden h-full relative">
+      <div className="flex items-center gap-3 px-4 pt-4 pb-4 bg-background/80 backdrop-blur-md z-10 border-b border-white/5 flex-shrink-0">
+        <button onClick={onBack} className="w-11 h-11 rounded-xl glass-button flex items-center justify-center hover:scale-95 duration-200 active:scale-90 transition-all"><ArrowLeft size={18} /></button>
+        <h2 className="font-black text-lg">{mz ? "Account Paihna" : "Delete Your Account"}</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 text-left" style={{ scrollbarWidth: "none" }}>
+        <div className="glass-card rounded-2xl p-4 shadow-sm space-y-2">
+          <p className="font-black text-sm">Alpha Mobile</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {mz
+              ? "Alpha Mobile app/website-a account i siam chu engtik lai pawhin i paih thei e. A hnuaia kawng pahnih zinga pakhat hmang rawh."
+              : "You can delete the account you created in the Alpha Mobile app or website at any time, using either of the two options below."}
+          </p>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 shadow-sm space-y-2">
+          <h4 className="font-black text-sm">{mz ? "1. App chhungah" : "1. In the app"}</h4>
+          <ol className="list-decimal pl-5 text-xs text-muted-foreground space-y-1 leading-relaxed">
+            <li>{mz ? "I account hmangin lut rawh." : "Log in to your account."}</li>
+            <li>{mz ? "Profile (Settings) tab hawng rawh." : "Open the Profile (Settings) tab."}</li>
+            <li>{mz ? "Account hnuaiah \"Ka Account Paihna\" hmet la, nemnghet rawh." : "Under Account, tap \"Delete My Account\" and confirm."}</li>
+          </ol>
+          <p className="text-xs text-muted-foreground leading-relaxed">{mz ? "I account chu nghal takin paih a ni ang." : "Your account is deleted immediately."}</p>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 shadow-sm space-y-2">
+          <h4 className="font-black text-sm">{mz ? "2. Email hmangin" : "2. By e-mail"}</h4>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {mz
+              ? "Account i siamna Gmail atang hian subject-ah \"Delete my account\" tiin email thawn rawh:"
+              : "Send an e-mail with the subject \"Delete my account\" from the Gmail address you registered with to:"}
+          </p>
+          <a href="mailto:alphamobilemizoram@gmail.com?subject=Delete%20my%20account" className="text-sm font-bold text-blue-400 hover:underline">alphamobilemizoram@gmail.com</a>
+          <p className="text-xs text-muted-foreground leading-relaxed">{mz ? "Ni 7 chhungin kan paih ang a, kan chhang ang che." : "We delete the account within 7 days and reply to confirm."}</p>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 shadow-sm space-y-2">
+          <h4 className="font-black text-sm">{mz ? "Eng nge paih a nih ang?" : "What is deleted"}</h4>
+          <ul className="list-disc pl-5 text-xs text-muted-foreground space-y-1 leading-relaxed">
+            <li>{mz ? "I login (Gmail leh password)" : "Your login (Gmail address and password)"}</li>
+            <li>{mz ? "I profile: hming, phone number, address, pincode" : "Your profile: name, phone number, address, pincode"}</li>
+            <li>{mz ? "Payment screenshot i upload tawhte" : "Payment screenshots you uploaded"}</li>
+          </ul>
+          <h4 className="font-black text-sm pt-2">{mz ? "Eng nge la vawn ni ang?" : "What is kept"}</h4>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {mz
+              ? "Order i siam tawhte (thil lei, man, delivery hming/phone/address, UTR) chu dawr chhut leh tax record atan i account tel lovin kan la vawng ang."
+              : "Orders you already placed (items, amounts, the delivery name/phone/address and UTR) are kept, no longer linked to any account, because the shop needs them for accounting and tax records."}
+          </p>
+        </div>
       </div>
     </div>
   );
