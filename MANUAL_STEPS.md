@@ -68,3 +68,42 @@ Do these in order. Tick each box when it's done. I never guessed or committed an
     from before this update are cleared once.
 15. [ ] Not done (optional item 2.7): splitting `App.tsx` into `screens/` and `admin/`
     files. I skipped it to avoid any behaviour change before the Play release.
+
+---
+
+## Phase 3 — Android app (Capacitor)
+
+App ID **`com.alphamobile.app`** (you confirmed it) · name "Alpha Mobile" · versionCode 1 ·
+versionName 1.0.0 · minSdk 24 · targetSdk/compileSdk 36. Capacitor 8.6.
+
+16. [ ] **Create your keystore and set its password yourself.** Follow `scripts/make-keystore.md`.
+    Then replace the `CHANGE_ME` values in `android/key.properties` (Git ignores this file).
+17. [ ] **Build the signed .aab.** Run these in PowerShell:
+    ```powershell
+    cd D:\alphamobile
+    pnpm install
+    pnpm build
+    npx cap sync android
+    cd android
+    $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+    .\gradlew.bat bundleRelease
+    ```
+    Output: `D:\alphamobile\android\app\build\outputs\bundle\release\app-release.aab`.
+    I already built it once without a key to prove the build works. That file is
+    **unsigned**, so it can't be uploaded. Rebuild after step 16.
+18. [ ] **Build only after `.env` is final.** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and
+    `VITE_SITE_URL` are baked into the app at `pnpm build` time. In the app, the
+    password-reset e-mail link uses `VITE_SITE_URL`. If it is empty, it uses the Supabase
+    "Site URL".
+19. [ ] **Every Play update:** raise `versionCode` (2, 3, ...) and `versionName` in
+    `android/app/build.gradle`, then repeat step 17.
+20. [ ] **Test on a real phone before uploading.** Android Studio → open the `android` folder
+    → Run. Or install a debug APK with `.\gradlew.bat assembleDebug`. Check: login, order
+    with UPI and screenshot, the back button, and the WhatsApp/Instagram/phone links.
+21. [ ] **Decide: "⚡ Open GPay / UPI App" button.** The task file mentions this button, but
+    the current UI never shows it. There is only a translation string for it, and the Help FAQ
+    mentions it. I did **not** add it, because you said not to change features or look. The app
+    is ready for it: `upi://` links open the Android UPI app chooser. If you want the button
+    under the QR code, tell me and I'll add it in the same blue button style.
+22. [ ] `local.properties` points to `C:/Users/Onema/AppData/Local/Android/Sdk`. Git ignores
+    it. Android Studio will rewrite it if your SDK is somewhere else.

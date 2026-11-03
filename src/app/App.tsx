@@ -23,6 +23,7 @@ import { supabaseService, mapDbOrder, Product, Order, Customer, CartItem, Profil
 import { supabase } from "./lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { QRCodeSVG } from "qrcode.react";
+import { isNative, initNative } from "./lib/native";
 
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -206,7 +207,11 @@ const calcShipping = (subtotal: number, paymentSettings: any) => {
 };
 
 /** Public website (used in auth e-mails and for /privacy, /delete-account). */
-const SITE_URL = ((import.meta.env.VITE_SITE_URL as string) || window.location.origin).replace(/\/$/, "");
+// Inside the Android app the origin is https://localhost, which is useless in
+// an e-mail link, so only VITE_SITE_URL is used there (undefined → Supabase
+// falls back to the "Site URL" set in the dashboard).
+const SITE_URL: string | undefined =
+  ((import.meta.env.VITE_SITE_URL as string) || (isNative ? "" : window.location.origin)).replace(/\/$/, "") || undefined;
 
 /** Customer-friendly text for errors raised by place_order() and auth. */
 function friendlyError(err: any, lang: "en" | "mz"): string {
@@ -4268,6 +4273,8 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
+    // Inside the Android app there is nothing to install: no PWA banner.
+    if (isNative) return;
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -4275,6 +4282,21 @@ export default function App() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
+
+  // Android: status bar, external links (upi:, tel:, wa.me, Instagram) and
+  // the hardware back button (router history; exit on the home screen).
+  const backStateRef = useRef({ pathname: location.pathname, notif: false, adminNotif: false });
+  backStateRef.current = { pathname: location.pathname, notif: isNotifDrawerOpen, adminNotif: isAdminNotifDrawerOpen };
+  useEffect(() => initNative(() => {
+    const st = backStateRef.current;
+    if (st.notif) { setIsNotifDrawerOpen(false); return true; }
+    if (st.adminNotif) { setIsAdminNotifDrawerOpen(false); return true; }
+    if (st.pathname === "/") return false;
+    const idx = (window.history.state as any)?.idx;
+    if (typeof idx === "number" && idx > 0) navigate(-1);
+    else navigate("/", { replace: true });
+    return true;
+  }), []);
 
   const handleInstallApp = async () => {
     if (!deferredPrompt) return;
